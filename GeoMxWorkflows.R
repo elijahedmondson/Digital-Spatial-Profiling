@@ -1,60 +1,30 @@
 library(GeoMxWorkflows)
-
-## ----style, echo = FALSE, results = "asis"------------------------------------
-BiocStyle::markdown()
-
-## ----setup, include = FALSE---------------------------------------------------
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 5,
-  fig.height = 4.5,
-  dpi = 200
-)
-
-## ----InstallGeomxTools, echo = TRUE, eval = FALSE-----------------------------
-#  install.packages("devtools")
-#  devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
-#  devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
-#  devtools::install_github("Nanostring-Biostats/GeoMxWorkflows", ref = "main")
-
-## ----libs, message = FALSE, warning = FALSE, eval = TRUE----------------------
 library(NanoStringNCTools)
 library(GeomxTools)
-library(GeoMxWorkflows)
+knitr::opts_chunk$set(echo = TRUE)
+output_prefix<-"CPTR474"
+projectname<-"CPTR474"
+datadir<-"C:/Users/edmondsonef/Desktop/DSP GeoMX/data/WTA_04122022/raw_data"
+DCCdir<-"DCC-20220420"
+PKCfilename<-"Mm_R_NGS_WTA_v1.0.pkc"
+WorkSheet<-"20220414T0150_efe.xlsx"
 
-## ----quickstart, message = FALSE, warning = FALSE-----------------------------
-# Reference the main folder 'file.path' containing the sub-folders with each
-# data file type:
-datadir <- system.file("extdata", "WTA_NGS_Example",
-                       package="GeoMxWorkflows")
-# to locate a specific file path replace the above line with
-# datadir <- file.path("~/Folder/SubFolder/DataLocation")
-# replace the Folder, SubFolder, DataLocation as needed
 
-# the DataLocation folder should contain a dccs, pkcs, and annotation folder
-# with each set of files present as needed
+DCCFiles <- list.files(file.path(datadir , DCCdir), pattern=".dcc$", full.names=TRUE)
+PKCFiles <- file.path(datadir, PKCfilename)
+SampleAnnotationFile <- file.path(datadir, WorkSheet)
 
-## ----locateFiles, message = FALSE, warning = FALSE----------------------------
-# automatically list files in each directory for use
-DCCFiles <- dir(file.path(datadir, "dccs"), pattern = ".dcc$",
-                full.names = TRUE, recursive = TRUE)
-PKCFiles <- unzip(zipfile = dir(file.path(datadir, "pkcs"), pattern = ".zip$",
-                                full.names = TRUE, recursive = TRUE))
-SampleAnnotationFile <-
-  dir(file.path(datadir, "annotation"), pattern = ".xlsx$",
-      full.names = TRUE, recursive = TRUE)
+myData<-readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                               pkcFiles = PKCFiles,
+                               phenoDataFile = SampleAnnotationFile,
+                               phenoDataSheet = "Template",
+                               phenoDataDccColName = "Sample_ID",
+                               protocolDataColNames = c("aoi", "roi"),
+                               experimentDataColNames = c("panel")) 
 
-## ----loadData, message = FALSE, warning = FALSE-------------------------------
-# load data
-demoData <-
-  readNanoStringGeoMxSet(dccFiles = DCCFiles,
-                         pkcFiles = PKCFiles,
-                         phenoDataFile = SampleAnnotationFile,
-                         phenoDataSheet = "Template",
-                         phenoDataDccColName = "Sample_ID",
-                         protocolDataColNames = c("aoi", "roi"),
-                         experimentDataColNames = c("panel"))
+
+
+
 
 ## ----modules------------------------------------------------------------------
 library(knitr)
