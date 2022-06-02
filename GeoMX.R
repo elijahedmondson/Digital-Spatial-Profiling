@@ -6,7 +6,7 @@ projectname<-"CPTR474"
 datadir<-"C:/Users/edmondsonef/Desktop/DSP GeoMX/data/WTA_04122022/raw_data"
 DCCdir<-"DCC-20220420"
 PKCfilename<-"Mm_R_NGS_WTA_v1.0.pkc"
-WorkSheet<-"Elijah_20220414T0150_LabWorksheet_NK_edited_withnuclei.xlsx"
+WorkSheet<-"20220414T0150_efe.xlsx"
 
 
 DCCFiles <- list.files(file.path(datadir , DCCdir), pattern=".dcc$", full.names=TRUE)
@@ -366,7 +366,8 @@ boxplot(assayDataElement(target_myData[,1:20], elt = "q_norm"),
 library(umap)
 library(Rtsne)
 
-myshapes<-c(16,17,18,15,21,22,3,42,4,8)
+myshapes<-c(16,17,18,15,21,22,3,42,4,8,10,19)
+myshapes<-c(1,2,16,4,17,6,7,8,18,15,19,12)#3,59,10,11,
 # update defaults for umap to contain a stable random_state (seed)
 custom_umap <- umap::umap.defaults
 custom_umap$random_state <- 42
@@ -375,11 +376,19 @@ umap_out <-
   umap(t(log2(assayDataElement(target_myData , elt = "q_norm"))),  
        config = custom_umap)
 pData(target_myData)[, c("UMAP1", "UMAP2")] <- umap_out$layout[, c(1,2)]
-ggplot(pData(target_myData),
-       aes(x = UMAP1, y = UMAP2, color = class, shape=region)) +
-  geom_point(size = 3) +
+pUMAP <- ggplot(pData(target_myData),
+       aes(x = UMAP1, y = UMAP2, color = dx, label=dxf)) +
+  geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   scale_shape_manual(values=myshapes) +
-  theme_bw()
+  theme_bw()+
+  theme(legend.position="none")
+pUMAP
+
+setwd("C:/Users/edmondsonef/Desktop/R-plots/")
+tiff("UMAP.tiff", units="in", width=19, height=12, res=150)
+pUMAP
+dev.off()
+
 
 # run tSNE
 set.seed(42) # set the seed for tSNE as well
@@ -387,11 +396,18 @@ tsne_out <-
   Rtsne(t(log2(assayDataElement(target_myData , elt = "q_norm"))),
         perplexity = ncol(target_myData)*.15)
 pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
-ggplot(pData(target_myData),
-       aes(x = tSNE1, y = tSNE2, color = class, shape=region)) +
-  geom_point(size = 3) +
+pTSNE <- ggplot(pData(target_myData),
+       aes(x = tSNE1, y = tSNE2, color = dx, label=dxf)) +
+  geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   scale_shape_manual(values=myshapes) +
-  theme_bw()
+  theme_bw()+
+  theme(legend.position="none")
+pTSNE
+
+setwd("C:/Users/edmondsonef/Desktop/R-plots/")
+tiff("TSNE.tiff", units="in", width=19, height=12, res=150)
+pTSNE
+dev.off()
 
 ## run PCA
 PCAx<-1
@@ -405,14 +421,20 @@ pData(target_myData)[, c("PC1", "PC2")] <- pcaData[,c(1,2)]
 percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
 
 
-ggplot(pData(target_myData),
-       aes(x = PC1, y = PC2, color = class, shape=region)) +
-  geom_point(size = 3) +
+pPCA <- ggplot(pData(target_myData),
+       aes(x = PC1, y = PC2, color=dx, label=dxf)) +
+  geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
   scale_shape_manual(values=myshapes) +
-  theme_bw()
+  theme_bw()+
+  theme(legend.position="none")
+pPCA
 
+setwd("C:/Users/edmondsonef/Desktop/R-plots/")
+tiff("PCA.tiff", units="in", width=19, height=12, res=150)
+pPCA
+dev.off()
 
 library(pheatmap)  # for pheatmap
 # create a log2 transform of the data for analysis
