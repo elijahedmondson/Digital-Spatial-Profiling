@@ -422,7 +422,7 @@ percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
 
 
 pPCA <- ggplot(pData(target_myData),
-       aes(x = PC1, y = PC2, color=dx, label=dxf)) +
+       aes(x = PC1, y = PC2, color=dx, label=dxsf)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +

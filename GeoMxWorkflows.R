@@ -32,19 +32,27 @@ kable(data.frame(PKCs = pkcs, modules = modules))
 library(dplyr)
 library(ggforce)
 
-count_mat <- count(pData(myData), `core`, class, region, segment)
+
+
+
+library(dplyr)
+library(ggforce)
+
+# select the annotations we want to show, use `` to surround column names with
+# spaces or special symbols
+count_mat <- count(pData(myData), `TMA Core`, Class, Origin, Sex, Age, Strain, Call, dx)
 # simplify the slide names
-count_mat$`slide name` <- gsub("disease", "d",
-                               gsub("normal", "n", count_mat$`core`))
+count_mat$`core` <- gsub("disease", "d",
+                               gsub("normal", "n", count_mat$`TMA Core`))
 # gather the data and plot in order: class, slide name, region, segment
-test_gr <- gather_set_data(count_mat, 1:4)
+test_gr <- gather_set_data(count_mat, 1:7)
 test_gr$x <- factor(test_gr$x,
-                    levels = c("class", "slide name", "Region", "segment"))
+                    levels = c("Strain","Sex", "Age", "TMA Core", "Class","Origin", "Call"))
 # plot Sankey
-ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
-  geom_parallel_sets(aes(fill = region), alpha = 0.5, axis.width = 0.1) +
+sampleoverview <- ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
+  geom_parallel_sets(aes(fill = dx), alpha = 0.5, axis.width = 0.1) +
   geom_parallel_sets_axes(axis.width = 0.2) +
-  geom_parallel_sets_labels(color = "white", size = 5) +
+  geom_parallel_sets_labels(color = "white", size = 4) +
   theme_classic(base_size = 17) + 
   theme(legend.position = "bottom",
         axis.ticks.y = element_blank(),
@@ -53,10 +61,20 @@ ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
   scale_y_continuous(expand = expansion(0)) + 
   scale_x_discrete(expand = expansion(0)) +
   labs(x = "", y = "") +
-  annotate(geom = "segment", x = 4.25, xend = 4.25,
-           y = 20, yend = 120, lwd = 2) +
-  annotate(geom = "text", x = 4.19, y = 70, angle = 90, size = 5,
-           hjust = 0.5, label = "100 segments")
+  annotate(geom = "segment", x = 7.25, xend = 7.25,
+           y = 0, yend = 20, lwd = 2) +
+  annotate(geom = "text", x = 7.19, y = 7.8, angle = 90, size = 4,
+           hjust = 0.5, label = "20 segments")
+
+
+sampleoverview
+
+setwd("C:/Users/edmondsonef/Desktop/R-plots/")
+tiff("sampleoverview.tiff", units="in", width=19, height=15, res=150)
+sampleoverview
+dev.off()
+
+
 
 ## ----shiftCounts, eval = TRUE-------------------------------------------------
 # Shift counts to one
@@ -250,7 +268,7 @@ pData(target_myData)$DetectionThreshold <-
 # stacked bar plot of different cut points (1%, 5%, 10%, 15%)
 ggplot(pData(target_myData),
        aes(x = DetectionThreshold)) +
-  geom_bar(aes(fill = region)) +
+  geom_bar(aes(fill = Call)) +
   geom_text(stat = "count", aes(label = ..count..), vjust = -0.5) +
   theme_bw() +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
@@ -258,10 +276,13 @@ ggplot(pData(target_myData),
        y = "Segments, #",
        fill = "Segment Type")
 
+####
+####
+####
 ## ----segTable-----------------------------------------------------------------
 # cut percent genes detected at 1, 5, 10, 15
 kable(table(pData(target_myData)$DetectionThreshold,
-            pData(target_myData)$class))
+            pData(target_myData)$Class))
 
 ## ----filterSegments-----------------------------------------------------------
 target_myData <-
@@ -269,24 +290,26 @@ target_myData <-
 
 dim(target_myData)
 
+
+
+
 ## ----replotSankey, fig.width = 10, fig.height = 8, fig.wide = TRUE, message = FALSE, warning = FALSE----
 # select the annotations we want to show, use `` to surround column names with
 # spaces or special symbols
-count_mat <- count(pData(myData), `slide name`, class, region, segment)
+
+count_mat <- count(pData(myData), `TMA Core`, Class, Origin, Sex, Age, Strain, Call, dx)
 # simplify the slide names
-count_mat$`slide name` <- 
-  gsub("disease", "d",
-       gsub("normal", "n", count_mat$`slide name`))
+count_mat$`core` <- gsub("disease", "d",
+                         gsub("normal", "n", count_mat$`TMA Core`))
 # gather the data and plot in order: class, slide name, region, segment
-test_gr <- gather_set_data(count_mat, 1:4)
-test_gr$x <-
-  factor(test_gr$x,
-         levels = c("class", "slide name", "region", "segment"))
+test_gr <- gather_set_data(count_mat, 1:7)
+test_gr$x <- factor(test_gr$x,
+                    levels = c("Strain","Sex", "Age", "TMA Core", "Class","Origin", "Call"))
 # plot Sankey
-ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
-  geom_parallel_sets(aes(fill = region), alpha = 0.5, axis.width = 0.1) +
+sampleoverview2 <- ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
+  geom_parallel_sets(aes(fill = dx), alpha = 0.5, axis.width = 0.1) +
   geom_parallel_sets_axes(axis.width = 0.2) +
-  geom_parallel_sets_labels(color = "white", size = 5) +
+  geom_parallel_sets_labels(color = "white", size = 4) +
   theme_classic(base_size = 17) + 
   theme(legend.position = "bottom",
         axis.ticks.y = element_blank(),
@@ -295,10 +318,29 @@ ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
   scale_y_continuous(expand = expansion(0)) + 
   scale_x_discrete(expand = expansion(0)) +
   labs(x = "", y = "") +
-  annotate(geom = "segment", x = 4.25, xend = 4.25, y = 20, 
-           yend = 120, lwd = 2) +
-  annotate(geom = "text", x = 4.19, y = 70, angle = 90, size = 5,
-           hjust = 0.5, label = "100 segments")
+  annotate(geom = "segment", x = 7.25, xend = 7.25,
+           y = 0, yend = 20, lwd = 2) +
+  annotate(geom = "text", x = 7.19, y = 7.8, angle = 90, size = 4,
+           hjust = 0.5, label = "20 segments")
+
+
+sampleoverview2
+
+setwd("C:/Users/edmondsonef/Desktop/R-plots/")
+tiff("sampleoverview2.tiff", units="in", width=19, height=15, res=150)
+sampleoverview2
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
 
 ## ----goi detection------------------------------------------------------------
 library(scales) # for percent
@@ -310,8 +352,19 @@ fData(target_myData)$DetectionRate <-
   fData(target_myData)$DetectedSegments / nrow(pData(target_myData))
 
 # Gene of interest detection table
-goi <- c("PDCD1", "CD274", "IFNG", "CD8A", "CD68", "EPCAM",
-         "KRT18", "NPHS1", "NPHS2", "CALB1", "CLDN8")
+#goi <- c("PDCD1", "CD274", "IFNG", "CD8A", "CD68", "EPCAM",
+#         "KRT18", "NPHS1", "NPHS2", "CALB1", "CLDN8")
+goi <- c("Kras", "Trp53", "Cd274", "Ifng", "Cd8a", "Cd68", "Epcam",
+         "Krt18", "Notch1", "Notch2", "Notch3", "Notch4","Cldn8",
+         "Cdk6","Msh3","Myc","Mastl","Sox2","Cav1","Fosl1","Gata4",
+         "Cldn18","Capn6","Sox17","Muc5ac","Tff1","Smad4","Sox9",
+         "Ptf1a","Pdx1","Nr5a2","Neurog3","Bhlha15","Krt19","Onecut1","Gata4",
+         "Gata6")
+
+#hnf6 = Onecut1
+#Ngn3 = Neurog3
+#Mist1 = Bhlha15
+
 goi_df <- data.frame(
   Gene = goi,
   Number = fData(target_myData)[goi, "DetectedSegments"],
@@ -362,7 +415,7 @@ library(reshape2)  # for melt
 library(cowplot)   # for plot_grid
 
 # Graph Q3 value vs negGeoMean of Negatives
-ann_of_interest <- "region"
+ann_of_interest <- "Call"
 Stat_data <- 
   data.frame(row.names = colnames(exprs(target_myData)),
              Segment = colnames(exprs(target_myData)),
@@ -446,8 +499,8 @@ umap_out <-
        config = custom_umap)
 pData(target_myData)[, c("UMAP1", "UMAP2")] <- umap_out$layout[, c(1,2)]
 ggplot(pData(target_myData),
-       aes(x = UMAP1, y = UMAP2, color = region, shape = class)) +
-  geom_point(size = 3) +
+       aes(x = UMAP1, y = UMAP2, color = Origin, shape = Call, label=dxsf)) +
+  geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   theme_bw()
 
 # run tSNE
@@ -457,9 +510,35 @@ tsne_out <-
         perplexity = ncol(target_myData)*.15)
 pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_myData),
-       aes(x = tSNE1, y = tSNE2, color = region, shape = class)) +
-  geom_point(size = 3) +
+       aes(x = tSNE1, y = tSNE2, color = Origin, shape = Call, label=dxsf)) +
+  geom_point(size = 3) +geom_text(hjust=1.1, vjust=0.2)+
   theme_bw()
+
+
+## run PCA
+PCAx<-1
+PCAy<-2
+PCAxy <- c(as.integer( PCAx ),as.integer( PCAy) ) # selected principal components
+
+
+pca.object <- prcomp(t(log2(assayDataElement(target_myData , elt = "q_norm"))))
+pcaData = as.data.frame(pca.object$x[, PCAxy]); 
+pData(target_myData)[, c("PC1", "PC2")] <- pcaData[,c(1,2)]
+percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
+
+
+ggplot(pData(target_myData),
+               aes(x = PC1, y = PC2, color=Origin, label=dxsf)) +
+  geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
+  xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
+  ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
+
+  theme_bw()+
+  theme(legend.position="none")
+
+
+
+
 
 ## ----CVheatmap, eval = TRUE, echo = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE----
 library(pheatmap)  # for pheatmap
@@ -486,22 +565,32 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
          breaks = seq(-3, 3, 0.05),
          color = colorRampPalette(c("purple3", "black", "yellow2"))(120),
          annotation_col = 
-           pData(target_myData)[, c("class", "segment", "region")])
+           pData(target_myData)[, c("Class", "Origin", "Call")])
+
+
+
+
+
+
+
+
+
+
 
 ## ----deNativeComplex, eval = TRUE, message = FALSE, warning = FALSE-----------
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$region, c("glomerulus", "tubule"))
+  factor(pData(target_myData)$dx, c("PanIN1","Normal acini"))                        ###CHANGE
 pData(target_myData)[["slide"]] <- 
-  factor(pData(target_myData)[["slide name"]])
+  factor(pData(target_myData)[["Sex"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
   assayDataApply(target_myData, 2, FUN = log, base = 2, elt = "q_norm")
 
 # run LMM:
 # formula follows conventions defined by the lme4 package
 results <- c()
-for(status in c("DKD", "normal")) {
-  ind <- pData(target_myData)$class == status
+for(status in c("Full ROI")) {
+  ind <- pData(target_myData)$segment == status
   mixedOutmc <-
     mixedModelDE(target_myData[, ind],
                  elt = "log_q",
@@ -529,57 +618,15 @@ for(status in c("DKD", "normal")) {
 }
 
 
-## ----DEtable, echo = TRUE, results = "asis"-----------------------------------
-kable(subset(results, Gene %in% goi & Subset == "normal"), digits = 3,
+
+kable(subset(results, Gene %in% goi & Subset == "Full ROI"), digits = 3,
       caption = "DE results for Genes of Interest",
       align = "lc", row.names = FALSE)
 
-## ----DEsimple, eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE-----
-# convert test variables to factors
-pData(target_myData)$testClass <-
-  factor(pData(target_myData)$class, c("normal", "DKD"))
-
-# run LMM:
-# formula follows conventions defined by the lme4 package
-results2 <- c()
-for(region in c("glomerulus", "tubule")) {
-  ind <- pData(target_myData)$region == region
-  mixedOutmc <-
-    mixedModelDE(target_myData[, ind],
-                 elt = "log_q",
-                 modelFormula = ~ testClass + (1 | slide),
-                 groupVar = "testClass",
-                 nCores = parallel::detectCores(),
-                 multiCore = FALSE)
-  
-  # format results as data.frame
-  r_test <- do.call(rbind, mixedOutmc["lsmeans", ])
-  tests <- rownames(r_test)
-  r_test <- as.data.frame(r_test)
-  r_test$Contrast <- tests
-  
-  # use lapply in case you have multiple levels of your test factor to
-  # correctly associate gene name with it's row in the results table
-  r_test$Gene <- 
-    unlist(lapply(colnames(mixedOutmc),
-                  rep, nrow(mixedOutmc["lsmeans", ][[1]])))
-  r_test$Subset <- region
-  r_test$FDR <- p.adjust(r_test$`Pr(>|t|)`, method = "fdr")
-  r_test <- r_test[, c("Gene", "Subset", "Contrast", "Estimate", 
-                       "Pr(>|t|)", "FDR")]
-  results2 <- rbind(results2, r_test)
-}
 
 
-## ----DEtable2, echo = TRUE, results = "asis"----------------------------------
-kable(subset(results2, Gene %in% goi & Subset == "tubule"), digits = 3,
-      caption = "DE results for Genes of Interest",
-      align = "lc", row.names = FALSE)
 
-## ----glomindex, eval = TRUE, echo = FALSE-------------------------------------
-# since we didn't execute above, ID the glomeruli for later use
 
-## ----volcanoPlot, fig.width = 11, fig.height = 7, fig.wide = TRUE, warning = FALSE, message = FALSE----
 library(ggrepel) 
 # Categorize Results based on P-value & FDR for plotting
 results$Color <- "NS or FC < 0.5"
@@ -595,25 +642,25 @@ results$Color <- factor(results$Color,
 # order genes for convenience:
 results$invert_P <- (-log10(results$`Pr(>|t|)`)) * sign(results$Estimate)
 top_g <- c()
-for(cond in c("DKD", "normal")) {
+for(cond in c("Full ROI")) {
   ind <- results$Subset == cond
   top_g <- c(top_g,
              results[ind, 'Gene'][
-               order(results[ind, 'invert_P'], decreasing = TRUE)[1:15]],
+               order(results[ind, 'invert_P'], decreasing = TRUE)[1:10]],
              results[ind, 'Gene'][
-               order(results[ind, 'invert_P'], decreasing = FALSE)[1:15]])
+               order(results[ind, 'invert_P'], decreasing = FALSE)[1:10]])
 }
 top_g <- unique(top_g)
 results <- results[, -1*ncol(results)] # remove invert_P from matrix
 
 # Graph results
-ggplot(results,
+p02 <- ggplot(results,
        aes(x = Estimate, y = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
   geom_point() +
-  labs(x = "Enriched in Tubules <- log2(FC) -> Enriched in Glomeruli",
+  labs(x = "Normal Acini <- log2(FC) -> PanIN1",                            ###CHANGE
        y = "Significance, -log10(P)",
        color = "Significance") +
   scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue",
@@ -627,8 +674,34 @@ ggplot(results,
                   min.segment.length = .1, box.padding = .2, lwd = 2,
                   max.overlaps = 50) +
   theme_bw(base_size = 16) +
-  theme(legend.position = "bottom") +
-  facet_wrap(~Subset, scales = "free_y")
+  theme(legend.position = "bottom") #+
+  #facet_wrap(~Subset, scales = "free_y")
+p00
+p01
+p02
+
+#p00 = acini v duct
+#p01 = acini v ADM
+#p02 = acini v PanIN1
+#p03 = acini v PanIN2
+#p04 =
+#p05 =
+#p06 =
+
+
+tiff("Volcano.tiff", units="in", width=13, height=10, res=300)
+p01 + p02 + p03 + p04 + p05 + p06  
+  plot_layout(guides = "collect") + 
+  plot_annotation(title = "CBC: Erythroid Parameters")
+dev.off()
+
+
+
+
+
+
+
+
 
 ## ----targetTable, eval = TRUE, as.is = TRUE-----------------------------------
 kable(subset(results, Gene %in% c('PDHA1','ITGB1')), row.names = FALSE)
