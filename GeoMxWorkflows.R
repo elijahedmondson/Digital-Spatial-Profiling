@@ -580,7 +580,7 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
 ## ----deNativeComplex, eval = TRUE, message = FALSE, warning = FALSE-----------
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$dx, c("PanIN1","Normal acini"))                        ###CHANGE
+  factor(pData(target_myData)$dx, c("Metastasis","Normal acini"))                        ###CHANGE
 pData(target_myData)[["slide"]] <- 
   factor(pData(target_myData)[["Sex"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
@@ -646,21 +646,21 @@ for(cond in c("Full ROI")) {
   ind <- results$Subset == cond
   top_g <- c(top_g,
              results[ind, 'Gene'][
-               order(results[ind, 'invert_P'], decreasing = TRUE)[1:10]],
+               order(results[ind, 'invert_P'], decreasing = TRUE)[1:30]],
              results[ind, 'Gene'][
-               order(results[ind, 'invert_P'], decreasing = FALSE)[1:10]])
+               order(results[ind, 'invert_P'], decreasing = FALSE)[1:30]])
 }
 top_g <- unique(top_g)
 results <- results[, -1*ncol(results)] # remove invert_P from matrix
 
 # Graph results
-p02 <- ggplot(results,
+p06 <- ggplot(results,                                                          ###CHANGE
        aes(x = Estimate, y = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
   geom_point() +
-  labs(x = "Normal Acini <- log2(FC) -> PanIN1",                            ###CHANGE
+  labs(x = "Normal Acini <- log2(FC) -> Metastasis",                                 ###CHANGE
        y = "Significance, -log10(P)",
        color = "Significance") +
   scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue",
@@ -676,23 +676,21 @@ p02 <- ggplot(results,
   theme_bw(base_size = 16) +
   theme(legend.position = "bottom") #+
   #facet_wrap(~Subset, scales = "free_y")
-p00
-p01
-p02
+
 
 #p00 = acini v duct
 #p01 = acini v ADM
 #p02 = acini v PanIN1
 #p03 = acini v PanIN2
-#p04 =
-#p05 =
-#p06 =
+#p04 = acini v PanIN3
+#p05 = acini v Carcinoma
+#p06 = acini v Metastasis
 
-
-tiff("Volcano.tiff", units="in", width=13, height=10, res=300)
+library(patchwork)
+setwd("C:/Users/edmondsonef/Desktop/R-plots/")
+tiff("Volcano.tiff", units="in", width=18, height=15, res=300)
 p01 + p02 + p03 + p04 + p05 + p06  
-  plot_layout(guides = "collect") + 
-  plot_annotation(title = "CBC: Erythroid Parameters")
+  plot_layout(guides = "collect") 
 dev.off()
 
 
