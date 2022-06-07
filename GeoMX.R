@@ -6,7 +6,8 @@ projectname<-"CPTR474"
 datadir<-"C:/Users/edmondsonef/Desktop/DSP GeoMX/data/WTA_04122022/raw_data"
 DCCdir<-"DCC-20220420"
 PKCfilename<-"Mm_R_NGS_WTA_v1.0.pkc"
-WorkSheet<-"20220414T0150_efe.xlsx"
+#WorkSheet<-"20220414T0150_efe.xlsx"
+WorkSheet<-"Elijah_20220414T0150_LabWorksheet_NK_edited_withnuclei.xlsx"
 
 
 DCCFiles <- list.files(file.path(datadir , DCCdir), pattern=".dcc$", full.names=TRUE)
@@ -37,7 +38,7 @@ QC_params <-
        percentStitched = 80,   # Minimum % of reads stitched (80%)
        percentAligned = 80,    # Minimum % of reads aligned to known targets (80%)
        percentSaturation = 50, # Minimum sequencing saturation (50%)
-       minNegativeCount = 10,   # Minimum negative control counts (10)
+       minNegativeCount = 10,  # Minimum negative control counts (10)
        maxNTCCount = 1000,     # Maximum counts observed in NTC well (1000)
        minNuclei = 20,         # Minimum # of cells observed in a segment (100)
        minArea = 1000)         # Minimum segment area (5000)
@@ -377,7 +378,7 @@ umap_out <-
        config = custom_umap)
 pData(target_myData)[, c("UMAP1", "UMAP2")] <- umap_out$layout[, c(1,2)]
 pUMAP <- ggplot(pData(target_myData),
-       aes(x = UMAP1, y = UMAP2, color = dx, label=dxf)) +
+       aes(x = UMAP1, y = UMAP2, color = class, label=dxsf)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   scale_shape_manual(values=myshapes) +
   theme_bw()+
@@ -397,7 +398,7 @@ tsne_out <-
         perplexity = ncol(target_myData)*.15)
 pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 pTSNE <- ggplot(pData(target_myData),
-       aes(x = tSNE1, y = tSNE2, color = dx, label=dxf)) +
+       aes(x = tSNE1, y = tSNE2, color = class, label=dxsf)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   scale_shape_manual(values=myshapes) +
   theme_bw()+
@@ -422,7 +423,7 @@ percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
 
 
 pPCA <- ggplot(pData(target_myData),
-       aes(x = PC1, y = PC2, color=dx, label=dxsf)) +
+       aes(x = PC1, y = PC2, color=class, label=dxsf)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
@@ -476,7 +477,7 @@ count_mat <- count(pData(demoData), `slide name`, class, region, segment)
 # simplify the slide names
 count_mat$`slide name` <- gsub("disease", "d",
                                gsub("normal", "n", count_mat$`slide name`))
-# gather the data and plot in order: class, slide name, region, segment
+# gather the data and plot in order: dx, slide name, region, segment
 test_gr <- gather_set_data(count_mat, 1:4)
 test_gr$x <- factor(test_gr$x,
                     levels = c("class", "slide name", "region", "segment"))

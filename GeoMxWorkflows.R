@@ -1,3 +1,19 @@
+###
+###
+### TO DO LIST:
+###1. Venn diagram
+###2. Normalization methods comparison:
+###   a. Q3 (
+###       - Des's methods excluded more genes vs "vignettes/GeoMxWorkflows" 
+###   b. Negative normal
+###3. RNA trajectory analysis
+### 4. Clustering highly variable genes
+###
+###
+
+library(knitr)
+library(dplyr)
+library(ggforce)
 library(GeoMxWorkflows)
 library(NanoStringNCTools)
 library(GeomxTools)
@@ -7,8 +23,8 @@ projectname<-"CPTR474"
 datadir<-"C:/Users/edmondsonef/Desktop/DSP GeoMX/data/WTA_04122022/raw_data"
 DCCdir<-"DCC-20220420"
 PKCfilename<-"Mm_R_NGS_WTA_v1.0.pkc"
-WorkSheet<-"20220414T0150_efe.xlsx"
-
+WorkSheet<-"final.xlsx"
+final <- read_excel("C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/final.xlsx")
 
 DCCFiles <- list.files(file.path(datadir , DCCdir), pattern=".dcc$", full.names=TRUE)
 PKCFiles <- file.path(datadir, PKCfilename)
@@ -22,32 +38,27 @@ myData<-readNanoStringGeoMxSet(dccFiles = DCCFiles,
                                protocolDataColNames = c("aoi", "roi"),
                                experimentDataColNames = c("panel")) 
 
+#Shift counts to one to mimic how DSPDA handles zero counts
+myData <- shiftCountsOne(myData, elt="exprs", useDALogic=TRUE) 
 
-
-
-library(knitr)
 pkcs <- annotation(myData)
 modules <- gsub(".pkc", "", pkcs)
 kable(data.frame(PKCs = pkcs, modules = modules))
-library(dplyr)
-library(ggforce)
 
 
 
 
-library(dplyr)
-library(ggforce)
-
+#####
 # select the annotations we want to show, use `` to surround column names with
 # spaces or special symbols
-count_mat <- count(pData(myData), `TMA Core`, Class, Origin, Sex, Age, Strain, Call, dx)
+count_mat <- count(pData(myData), `Position`, Class, Origin, Sex, Age, Strain, Call, dx)
 # simplify the slide names
 count_mat$`core` <- gsub("disease", "d",
-                               gsub("normal", "n", count_mat$`TMA Core`))
+                               gsub("normal", "n", count_mat$`Position`))
 # gather the data and plot in order: class, slide name, region, segment
 test_gr <- gather_set_data(count_mat, 1:7)
 test_gr$x <- factor(test_gr$x,
-                    levels = c("Strain","Sex", "Age", "TMA Core", "Class","Origin", "Call"))
+                    levels = c("Strain","Sex", "Age", "Position", "Class","Origin", "Call"))
 # plot Sankey
 sampleoverview <- ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
   geom_parallel_sets(aes(fill = dx), alpha = 0.5, axis.width = 0.1) +
@@ -78,7 +89,7 @@ dev.off()
 
 ## ----shiftCounts, eval = TRUE-------------------------------------------------
 # Shift counts to one
-myData <- shiftCountsOne(myData, useDALogic = TRUE)
+#myData <- shiftCountsOne(myData, useDALogic = TRUE)
 
 ## ----setqcflagupdated,  eval = TRUE-------------------------------------------
 # Default QC cutoffs are commented in () adjacent to the respective parameters
@@ -88,7 +99,7 @@ QC_params <-
   list(minSegmentReads = 1000, # Minimum number of reads (1000)
        percentTrimmed = 80,    # Minimum % of reads trimmed (80%)
        percentStitched = 80,   # Minimum % of reads stitched (80%)
-       percentAligned = 75,    # Minimum % of reads aligned (80%)
+       percentAligned = 80,    # Minimum % of reads aligned (80%)
        percentSaturation = 50, # Minimum sequencing saturation (50%)
        minNegativeCount = 1,   # Minimum negative control counts (10)
        maxNTCCount = 9000,     # Maximum counts observed in NTC well (1000)
@@ -114,7 +125,7 @@ QC_Summary["TOTAL FLAGS", ] <-
 ## ----qcflagHistogramsCode, eval = TRUE, warning = FALSE, message = FALSE------
 library(ggplot2)
 
-col_by <- "segment"
+col_by <- "class"
 
 # Graphical summaries of QC statistics plot function
 QC_histogram <- function(assay_data = NULL,
@@ -239,6 +250,8 @@ for(module in modules) {
 }
 pData(target_myData)$LOQ <- LOQ
 
+head(target_myData@featureData)
+
 ## ----LOQMat, eval = TRUE------------------------------------------------------
 LOQ_Mat <- c()
 for(module in modules) {
@@ -297,14 +310,14 @@ dim(target_myData)
 # select the annotations we want to show, use `` to surround column names with
 # spaces or special symbols
 
-count_mat <- count(pData(myData), `TMA Core`, Class, Origin, Sex, Age, Strain, Call, dx)
+count_mat <- count(pData(myData), `Position`, Class, Origin, Sex, Age, Strain, Call, dx)
 # simplify the slide names
 count_mat$`core` <- gsub("disease", "d",
-                         gsub("normal", "n", count_mat$`TMA Core`))
+                         gsub("normal", "n", count_mat$`Position`))
 # gather the data and plot in order: class, slide name, region, segment
 test_gr <- gather_set_data(count_mat, 1:7)
 test_gr$x <- factor(test_gr$x,
-                    levels = c("Strain","Sex", "Age", "TMA Core", "Class","Origin", "Call"))
+                    levels = c("Strain","Sex", "Age", "Position", "Class","Origin", "Call"))
 # plot Sankey
 sampleoverview2 <- ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
   geom_parallel_sets(aes(fill = dx), alpha = 0.5, axis.width = 0.1) +
@@ -354,12 +367,13 @@ fData(target_myData)$DetectionRate <-
 # Gene of interest detection table
 #goi <- c("PDCD1", "CD274", "IFNG", "CD8A", "CD68", "EPCAM",
 #         "KRT18", "NPHS1", "NPHS2", "CALB1", "CLDN8")
-goi <- c("Kras", "Trp53", "Cd274", "Ifng", "Cd8a", "Cd68", "Epcam",
+goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam",
          "Krt18", "Notch1", "Notch2", "Notch3", "Notch4","Cldn8",
          "Cdk6","Msh3","Myc","Mastl","Sox2","Cav1","Fosl1","Gata4",
-         "Cldn18","Capn6","Sox17","Muc5ac","Tff1","Smad4","Sox9",
-         "Ptf1a","Pdx1","Nr5a2","Neurog3","Bhlha15","Krt19","Onecut1","Gata4",
-         "Gata6")
+         "Cldn18","Capn6","Muc5ac","Tff1","Smad4","Sox9",
+         "Ptf1a","Pdx1","Nr5a2","Neurog3","Bhlha15","Krt19",
+         "Onecut1","Onecut2","Onecut3","Cdkn1a","Prss2","Runx1","Gata4",
+         "Gata6", "S100a11")
 
 #hnf6 = Onecut1
 #Ngn3 = Neurog3
@@ -565,7 +579,7 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
          breaks = seq(-3, 3, 0.05),
          color = colorRampPalette(c("purple3", "black", "yellow2"))(120),
          annotation_col = 
-           pData(target_myData)[, c("Class", "Origin", "Call")])
+           pData(target_myData)[, c("class", "region", "Strain")])
 
 
 
@@ -580,7 +594,7 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
 ## ----deNativeComplex, eval = TRUE, message = FALSE, warning = FALSE-----------
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$dx, c("Metastasis","Normal acini"))                        ###CHANGE
+  factor(pData(target_myData)$dx, c("Metastasis","PanIN3"))                           ###CHANGE
 pData(target_myData)[["slide"]] <- 
   factor(pData(target_myData)[["Sex"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
@@ -654,13 +668,13 @@ top_g <- unique(top_g)
 results <- results[, -1*ncol(results)] # remove invert_P from matrix
 
 # Graph results
-p06 <- ggplot(results,                                                          ###CHANGE
+ggplot(results,                                                             ###CHANGE
        aes(x = Estimate, y = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
   geom_point() +
-  labs(x = "Normal Acini <- log2(FC) -> Metastasis",                                 ###CHANGE
+  labs(x = "Normal Acini <- log2(FC) -> ___",                                       ###CHANGE
        y = "Significance, -log10(P)",
        color = "Significance") +
   scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue",
@@ -685,6 +699,10 @@ p06 <- ggplot(results,                                                          
 #p04 = acini v PanIN3
 #p05 = acini v Carcinoma
 #p06 = acini v Metastasis
+#p07 = PanIN1 v PanIN2
+#p08 = PanIN1 v PanIN3
+#p09 = Normal acini v Bystander
+#p10 = Normal acini v Normal duct
 
 library(patchwork)
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
@@ -787,5 +805,32 @@ ggplot(subset(results, !Gene %in% neg_probes),
   theme_bw(base_size = 16) +
   facet_wrap(~Subset, nrow = 2, ncol = 1)
 
-## ----sessInfo-----------------------------------------------------------------
-sessionInfo()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(VennDiagram)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
