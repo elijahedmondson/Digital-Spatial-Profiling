@@ -17,6 +17,7 @@ library(ggforce)
 library(GeoMxWorkflows)
 library(NanoStringNCTools)
 library(GeomxTools)
+library(readxl)
 knitr::opts_chunk$set(echo = TRUE)
 output_prefix<-"CPTR474"
 projectname<-"CPTR474"
@@ -87,9 +88,7 @@ dev.off()
 
 
 
-## ----shiftCounts, eval = TRUE-------------------------------------------------
-# Shift counts to one
-#myData <- shiftCountsOne(myData, useDALogic = TRUE)
+
 
 ## ----setqcflagupdated,  eval = TRUE-------------------------------------------
 # Default QC cutoffs are commented in () adjacent to the respective parameters
@@ -180,6 +179,7 @@ for(ann in negCols) {
 pData(myData) <- pData(myData)[, !colnames(pData(myData)) %in% negCols]
 
 # show all NTC values, Freq = # of Segments with a given NTC count:
+print("Normalized Total Count... ?????  .... Number of segments???")
 kable(table(NTC_Count = sData(myData)$NTC),
       col.names = c("NTC Count", "# of Segments"))
 
@@ -228,7 +228,7 @@ length(unique(featureData(myData)[["TargetName"]]))
 # collapse to targets
 target_myData <- aggregateCounts(myData)
 dim(target_myData)
-exprs(target_myData)[1:5, 1:2]
+exprs(target_myData)[100:103, 1:4]
 
 
 ## ----calculateLOQ, eval = TRUE------------------------------------------------
@@ -250,7 +250,7 @@ for(module in modules) {
 }
 pData(target_myData)$LOQ <- LOQ
 
-head(target_myData@featureData)
+head(pData(target_myData)$LOQ)
 
 ## ----LOQMat, eval = TRUE------------------------------------------------------
 LOQ_Mat <- c()
@@ -275,7 +275,7 @@ pData(target_myData)$GeneDetectionRate <-
 # Determine detection thresholds: 1%, 5%, 10%, 15%, >15%
 pData(target_myData)$DetectionThreshold <- 
   cut(pData(target_myData)$GeneDetectionRate,
-      breaks = c(0, 0.01, 0.05, 0.1, 0.15, 1),
+      breaks = c(0, 0.01, 0.05, 0.1, 0.15,1),
       labels = c("<1%", "1-5%", "5-10%", "10-15%", ">15%"))
 
 # stacked bar plot of different cut points (1%, 5%, 10%, 15%)
@@ -299,12 +299,12 @@ kable(table(pData(target_myData)$DetectionThreshold,
 
 ## ----filterSegments-----------------------------------------------------------
 target_myData <-
-  target_myData[, pData(target_myData)$GeneDetectionRate >= .1]
+  target_myData[, pData(target_myData)$GeneDetectionRate >= .001]                    ########EFE change detection rate??
+pData(target_myData)[,24:25]
 
 dim(target_myData)
 
-
-
+target_myData@phenoData@data$dx
 
 ## ----replotSankey, fig.width = 10, fig.height = 8, fig.wide = TRUE, message = FALSE, warning = FALSE----
 # select the annotations we want to show, use `` to surround column names with
@@ -339,10 +339,10 @@ sampleoverview2 <- ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
 
 sampleoverview2
 
-setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-tiff("sampleoverview2.tiff", units="in", width=19, height=15, res=150)
-sampleoverview2
-dev.off()
+# setwd("C:/Users/edmondsonef/Desktop/R-plots/")
+# tiff("sampleoverview2.tiff", units="in", width=19, height=15, res=150)
+# sampleoverview2
+# dev.off()
 
 
 
@@ -565,7 +565,7 @@ calc_CV <- function(x) {sd(x) / mean(x)}
 CV_dat <- assayDataApply(target_myData,
                          elt = "log_q", MARGIN = 1, calc_CV)
 # show the highest CD genes and their CV values
-sort(CV_dat, decreasing = TRUE)[1:5]
+sort(CV_dat, decreasing = TRUE)[1:50]
 
 # Identify genes in the top 3rd of the CV values
 GOI <- names(CV_dat)[CV_dat > quantile(CV_dat, 0.8)]
