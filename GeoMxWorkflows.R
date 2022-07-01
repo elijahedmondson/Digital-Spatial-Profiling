@@ -18,6 +18,10 @@ library(GeoMxWorkflows)
 library(NanoStringNCTools)
 library(GeomxTools)
 library(readxl)
+
+####
+
+
 knitr::opts_chunk$set(echo = TRUE)
 output_prefix<-"CPTR474"
 projectname<-"CPTR474"
@@ -107,7 +111,7 @@ QC_params <-
        percentStitched = 80,   # Minimum % of reads stitched (80%)
        percentAligned = 80,    # Minimum % of reads aligned (80%)
        percentSaturation = 50, # Minimum sequencing saturation (50%)
-       minNegativeCount = 3,   # Minimum negative control counts (10)
+       minNegativeCount = 4,   # Minimum negative control counts (10)
        maxNTCCount = 9000,     # Maximum counts observed in NTC well (1000)
        minNuclei = 20,         # Minimum # of nuclei estimated (100)
        minArea = 1000)         # Minimum segment area (5000)
@@ -166,7 +170,6 @@ QC_histogram <- function(assay_data = NULL,
 # QC_histogram(sData(myData), "nuclei", col_by, 10)
 
 #QC_histogram(sData(myData), "Aligned", col_by, 10000)
-
 # calculate the negative geometric means for each module
 negativeGeoMeans <- 
   esBy(negativeControlSubset(myData), 
@@ -312,8 +315,8 @@ kable(table(pData(target_myData)$DetectionThreshold,
 
 ## ----filterSegments-----------------------------------------------------------
 target_myData <-
-  target_myData[, pData(target_myData)$GeneDetectionRate >= .1]                    ########EFE change detection rate??
-pData(target_myData)[,24:25]
+  target_myData[, pData(target_myData)$GeneDetectionRate >= .05]                    ########EFE excludes samples with low gene detection
+pData(target_myData)[,24:27]
 
 dim(target_myData)
 
@@ -423,9 +426,9 @@ kable(goi_df, caption = "Detection rate for Genes of Interest", align = "c",
 
 ## ----plotDetectionRate, eval = TRUE-------------------------------------------
 #Plot detection rate:
-plot_detect <- data.frame(Freq = c(1, 5, 10, 20, 30, 50))
+plot_detect <- data.frame(Freq = c(1, 3, 5, 10, 20, 30, 50))
 plot_detect$Number <-
-  unlist(lapply(c(0.01, 0.05, 0.1, 0.2, 0.3, 0.5),
+  unlist(lapply(c(0.01, 0.03, 0.05, 0.1, 0.2, 0.3, 0.5),
                 function(x) {sum(fData(target_myData)$DetectionRate >= x)}))
 plot_detect$Rate <- plot_detect$Number / nrow(fData(target_myData))
 rownames(plot_detect) <- plot_detect$Freq
@@ -450,19 +453,19 @@ ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
 negativeProbefData <- subset(fData(target_myData), CodeClass == "Negative")
 neg_probes <- unique(negativeProbefData$TargetName)
 target_myData <- 
-  target_myData[fData(target_myData)$DetectionRate >= 0.05 |
+  target_myData[fData(target_myData)$DetectionRate >= 0.03 |                    ########EFE change to include additional genes? 
                     fData(target_myData)$TargetName %in% neg_probes, ]
 dim(target_myData)
 
 # retain only detected genes of interest
 goi <- goi[goi %in% rownames(target_myData)]
 
-## ---- previewNF, fig.width = 8, fig.height = 8, fig.wide = TRUE, eval = TRUE, warning = FALSE, message = FALSE----
+## ----previewNF, fig.width = 8, fig.height = 8, fig.wide = TRUE, eval = TRUE, warning = FALSE, message = FALSE----
 library(reshape2)  # for melt
 library(cowplot)   # for plot_grid
 
 # Graph Q3 value vs negGeoMean of Negatives
-ann_of_interest <- "dx"
+ann_of_interest <- "dx2"
 Stat_data <- 
   data.frame(row.names = colnames(exprs(target_myData)),
              Segment = colnames(exprs(target_myData)),
@@ -518,19 +521,19 @@ target_myData <- normalize(target_myData , data_type = "RNA",
 
 ## ----normplot, fig.small = TRUE-----------------------------------------------
 # visualize the first 10 segments with each normalization method
-boxplot(exprs(target_myData)[,1:74],
+boxplot(exprs(target_myData)[,1:77],
         col = "#9EDAE5", main = "Raw Counts",
-        log = "y", names = 1:74, xlab = "Segment",
+        log = "y", names = 1:77, xlab = "Segment",
         ylab = "Counts, Raw")
 
-boxplot(assayDataElement(target_myData[,1:74], elt = "q_norm"),
+boxplot(assayDataElement(target_myData[,1:77], elt = "q_norm"),
         col = "#2CA02C", main = "Q3 Norm Counts",
-        log = "y", names = 1:74, xlab = "Segment",
+        log = "y", names = 1:77, xlab = "Segment",
         ylab = "Counts, Q3 Normalized")
 
-boxplot(assayDataElement(target_myData[,1:74], elt = "neg_norm"),
+boxplot(assayDataElement(target_myData[,1:77], elt = "neg_norm"),
         col = "#FF7F0E", main = "Neg Norm Counts",
-        log = "y", names = 1:74, xlab = "Segment",
+        log = "y", names = 1:77, xlab = "Segment",
         ylab = "Counts, Neg. Normalized")
 
 ## ----dimReduction, eval = TRUE------------------------------------------------
@@ -557,7 +560,7 @@ tsne_out <-
         perplexity = ncol(target_myData)*.15)
 pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_myData),
-       aes(x = tSNE1, y = tSNE2, color = progression1, shape = Call, label=dsxf)) +
+       aes(x = tSNE1, y = tSNE2, color = progression3, shape = Call, label=dsxf)) +
   geom_point(size = 3) +geom_text(hjust=1.1, vjust=0.2)+
   theme_bw()
 
@@ -612,28 +615,11 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
          breaks = seq(-3, 3, 0.05),
          color = colorRampPalette(c("purple3", "black", "yellow2"))(120),
          annotation_col = 
-           pData(target_myData)[, c("dx", "Sex","Strain")])
+           pData(target_myData)[, c("dx2", "Sex","Strain")])
 
+## ----Differential Expression----
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-###########Differential Expression
-###########Differential Expression
-###########Differential Expression
-###########Differential Expression
-###########Differential Expression
-
+load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX.RData")
 # If comparing structures that co-exist within a given tissue, use an LMM model 
 # with a random slope. Diagnosis is our test variable. We control for tissue 
 # sub-sampling with slide name using a random slope and intercept; the intercept adjusts for the multiple 
@@ -642,7 +628,7 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
 
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$progression1, c("5-PanINhi","4-PanINlo"))                           ###CHANGE
+  factor(pData(target_myData)$progression1)#, c("4-PanINlo","5-PanINhi"))                           ###CHANGE
 pData(target_myData)[["slide"]] <-                                            ### Control for 
   factor(pData(target_myData)[["MHL Number"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
@@ -732,23 +718,34 @@ for(cond in c("Full ROI")) {
 top_g <- unique(top_g)
 #results <- results[, -1*ncol(results)] # remove invert_P from matrix
 
+results$Contrast
 
+acini_bystander <- dplyr::filter(results, Contrast == "1-Normal acini - 2-Bystander")
+head(acini_bystander)
+acini_ADM <- dplyr::filter(results, Contrast == "1-Normal acini - 3-ADM")
+head(acini_ADM)
+PanINlo_PanINhi <- dplyr::filter(results, Contrast == "4-PanINlo - 5-PanINhi")
+acini_PanINhi <- dplyr::filter(results, Contrast == "1-Normal acini - 5-PanINhi")
+
+ADM_PanINlo <- dplyr::filter(results, Contrast == "3-ADM - 4-PanINlo")
+
+ADM_PanINhi <- dplyr::filter(results, Contrast == "3-ADM - 5-PanINhi")
 
 # Graph results
-ggplot(results,                                                             ###CHANGE
+ggplot(ADM_PanINhi,                                                             ###CHANGE
        aes(x = Estimate, y = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
   geom_point() +
-  labs(x = "PanINlo <- log2(FC) -> PanINhi",                                       ###CHANGE
+  labs(x = "___ <- log2(FC) -> ___",                                       ###CHANGE
        y = "Significance, -log10(P)",
        color = "Significance") +
   scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue", `FDR < 0.05` = "lightblue",
                                 `P < 0.05` = "orange2",`NS or FC < 0.5` = "gray"),
                      guide = guide_legend(override.aes = list(size = 4))) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
-  geom_text_repel(data = subset(results, Gene %in% goi),# & FDR < 0.05),
+  geom_text_repel(data = subset(ADM_PanINhi, Gene %in% top_g & FDR < 0.05),
                   size = 4, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2,
                   max.overlaps = 50) +
@@ -761,7 +758,7 @@ ggplot(results,                                                             ###C
 
 
 results1 <- filter(results, FDR < 0.001)
-write.csv(results1, file = 'prog2.csv')
+write.csv(results1, file = 'progression1_MHLnumber.csv')
 
 
 
@@ -780,6 +777,9 @@ dev.off()
 
 
 ## ----targetTable, eval = TRUE, as.is = TRUE-----------------------------------
+
+
+
 kable(subset(results, Gene %in% c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")), row.names = FALSE)
 kable(subset(results, Gene %in% c("Pdzd8")), row.names = FALSE)
 ## ----targetExprs, eval = TRUE-------------------------------------------------
