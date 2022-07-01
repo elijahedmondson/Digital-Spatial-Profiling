@@ -1,13 +1,18 @@
 ###
 ###
 ### TO DO LIST:
+###0. GLMM model to include path grades as continuous variables
+##   > fm2 <- lmer(Reaction ~ Days + (Days || Subject), sleepstudy)
+
+###0. Interaction terms?
+###
 ###1. Venn diagram
 ###2. Normalization methods comparison:
 ###   a. Q3 (
 ###       - Des's methods excluded more genes vs "vignettes/GeoMxWorkflows" 
 ###   b. Negative normal
 ###3. RNA trajectory analysis
-### 4. Clustering highly variable genes
+###4. Clustering highly variable genes
 ###
 ###
 
@@ -628,7 +633,7 @@ load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX.RData")
 
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$progression1)#, c("4-PanINlo","5-PanINhi"))                           ###CHANGE
+  factor(pData(target_myData)$prog4)#, c("4-PanINlo","5-PanINhi"))                           ###CHANGE
 pData(target_myData)[["slide"]] <-                                            ### Control for 
   factor(pData(target_myData)[["MHL Number"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
@@ -642,8 +647,9 @@ for(status in c("Full ROI")) {
   mixedOutmc <-
     mixedModelDE(target_myData[, ind],
                  elt = "log_q",
-                 modelFormula = ~ testRegion + (1 + testRegion | slide),
+                 modelFormula = ~ testRegion + (1 + testRegion | slide),        ### modelFormula =  Reaction ~ Days + (Days || Subject), sleepstudy)
                  #modelFormula = ~ testRegion + (1 | slide),
+                 #modelFormula = ~ testRegion + (1 + testRegion | slide),
                  groupVar = "testRegion",
                  nCores = parallel::detectCores(),
                  multiCore = FALSE)
@@ -675,13 +681,13 @@ goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam","Cre",
          "Onecut1","Onecut2","Onecut3","Cdkn1a","Prss2","Runx1","Gata6",
          "Gata6", "S100a11", "Nr5a2","Agr2", "Foxa2", "Fosl1","Ets2", "Runx3")
 
-goi.acini <- c("Ctrb1","Cpa1","Gata6","Bhlha15","Nr5a2","Ptf1a")
-goi.duct <- c("Hnf1b","Sox9","Krt19","Gata6","Onecut1")
-goi.ADM <- c("Cpa1","Gata6","Sox9","Onecut1","Ngn3","Nr5a2","Ptf1a","Pdx1")
-goi.PanIN <- c("Hes1","Dclk1","Sox9","Gata6","Ptf1a","Pdx1")
-goi.PDAC <- c("Dclk1","Pdx1")
-goi.PDACfromDuct <- "Agr2"
-goi.met <- c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")
+# goi.acini <- c("Ctrb1","Cpa1","Gata6","Bhlha15","Nr5a2","Ptf1a")
+# goi.duct <- c("Hnf1b","Sox9","Krt19","Gata6","Onecut1")
+# goi.ADM <- c("Cpa1","Gata6","Sox9","Onecut1","Ngn3","Nr5a2","Ptf1a","Pdx1")
+# goi.PanIN <- c("Hes1","Dclk1","Sox9","Gata6","Ptf1a","Pdx1")
+# goi.PDAC <- c("Dclk1","Pdx1")
+# goi.PDACfromDuct <- "Agr2"
+# goi.met <- c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")
 
 #library(biomaRt)
 
@@ -720,19 +726,19 @@ top_g <- unique(top_g)
 
 results$Contrast
 
-acini_bystander <- dplyr::filter(results, Contrast == "1-Normal acini - 2-Bystander")
+acini_bystander <- dplyr::filter(results, Contrast == "1 - 2")
 head(acini_bystander)
-acini_ADM <- dplyr::filter(results, Contrast == "1-Normal acini - 3-ADM")
-head(acini_ADM)
-PanINlo_PanINhi <- dplyr::filter(results, Contrast == "4-PanINlo - 5-PanINhi")
-acini_PanINhi <- dplyr::filter(results, Contrast == "1-Normal acini - 5-PanINhi")
-
-ADM_PanINlo <- dplyr::filter(results, Contrast == "3-ADM - 4-PanINlo")
-
-ADM_PanINhi <- dplyr::filter(results, Contrast == "3-ADM - 5-PanINhi")
+# acini_ADM <- dplyr::filter(results, Contrast == "1-Normal acini - 3-ADM")
+# head(acini_ADM)
+# PanINlo_PanINhi <- dplyr::filter(results, Contrast == "4-PanINlo - 5-PanINhi")
+# acini_PanINhi <- dplyr::filter(results, Contrast == "1-Normal acini - 5-PanINhi")
+# 
+# ADM_PanINlo <- dplyr::filter(results, Contrast == "3-ADM - 4-PanINlo")
+# 
+# ADM_PanINhi <- dplyr::filter(results, Contrast == "3-ADM - 5-PanINhi")
 
 # Graph results
-ggplot(ADM_PanINhi,                                                             ###CHANGE
+ggplot(results1,                                                             ###CHANGE
        aes(x = Estimate, y = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
@@ -745,7 +751,7 @@ ggplot(ADM_PanINhi,                                                             
                                 `P < 0.05` = "orange2",`NS or FC < 0.5` = "gray"),
                      guide = guide_legend(override.aes = list(size = 4))) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
-  geom_text_repel(data = subset(ADM_PanINhi, Gene %in% top_g & FDR < 0.05),
+  geom_text_repel(data = subset(results1, Gene %in% top_g & FDR < 0.05),
                   size = 4, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2,
                   max.overlaps = 50) +
@@ -758,7 +764,8 @@ ggplot(ADM_PanINhi,                                                             
 
 
 results1 <- filter(results, FDR < 0.001)
-write.csv(results1, file = 'progression1_MHLnumber.csv')
+setwd("C:/Users/edmondsonef/Desktop/R-plots/")
+write.csv(results1, file = 'prog4_MHLnumber.csv')
 
 
 
@@ -785,12 +792,12 @@ kable(subset(results, Gene %in% c("Pdzd8")), row.names = FALSE)
 ## ----targetExprs, eval = TRUE-------------------------------------------------
 # show expression for a single target: PDHA1
 ggplot(pData(target_myData),
-       aes(x = progression1, fill = dx,
-           y = assayDataElement(target_myData["Dnajc10", ],
+       aes(x = progression1, fill = progression1,
+           y = assayDataElement(target_myData["Soat1", ],
                                 elt = "q_norm"))) +
   geom_violin() +
   geom_jitter(width = .2) +
-  labs(y = "Spink1 Expression") +
+  labs(y = "Soat1 Expression") +
   scale_y_continuous(trans = "log2") +
   #facet_wrap(~class) +
   theme_bw()
@@ -806,18 +813,18 @@ ggplot(pData(target_myData),
                                 elt = "q_norm"),
            color = progression1)) +
   geom_vline(xintercept =
-               max(assayDataElement(target_myData["Pnliprp2", glom],
+               max(assayDataElement(target_myData["Dnajc10", glom],
                                     elt = "q_norm")),
              lty = "dashed", col = "darkgray") +
   geom_hline(yintercept =
-               max(assayDataElement(target_myData["Pnliprp2", glom],
+               max(assayDataElement(target_myData["Mtch2", glom],
                                     elt = "q_norm")),
              lty = "dashed", col = "darkgray") +
   geom_point(size = 3) +
   theme_bw() +
   scale_x_continuous(trans = "log2") + 
   scale_y_continuous(trans = "log2") +
-  labs(x = "Pnliprp2 Expression", y = "Mtch2 Expression") #+
+  labs(x = "Dnajc10 Expression", y = "Mtch2 Expression") #+
   #facet_wrap(~class)
 
 ## ----heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE----
@@ -875,15 +882,29 @@ ggplot(subset(results, !Gene %in% neg_probes),
 
 
 
+vennCounts(results, include="both")
 
 
 
+library(ggVennDiagram)
 
-library(VennDiagram)
+dim(target_myData)
+rownames(target_myData)
+
+exprs(target_myData)[1:15, 1:3]
 
 
+acini_bystander <- dplyr::filter(results, Contrast == "1 - 2")
+head(acini_bystander)
 
+genes <- paste0("gene",1:1000)
+set.seed(20210302)
+gene_list <- list(A = results1(genes,100),
+                  B = sample(genes,200),
+                  C = sample(genes,300),
+                  D = sample(genes,200))
 
+ggVennDiagram(acini_bystander,category.names = c("Stage 1","Stage 2","Stage 3", "Stage4"), label = "none")
 
 
 
