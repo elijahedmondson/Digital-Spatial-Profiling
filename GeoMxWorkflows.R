@@ -732,10 +732,9 @@ head(acini_bystander)
 # head(acini_ADM)
 # PanINlo_PanINhi <- dplyr::filter(results, Contrast == "4-PanINlo - 5-PanINhi")
 # acini_PanINhi <- dplyr::filter(results, Contrast == "1-Normal acini - 5-PanINhi")
-# 
-# ADM_PanINlo <- dplyr::filter(results, Contrast == "3-ADM - 4-PanINlo")
-# 
-# ADM_PanINhi <- dplyr::filter(results, Contrast == "3-ADM - 5-PanINhi")
+
+
+
 
 # Graph results
 ggplot(results1,                                                             ###CHANGE

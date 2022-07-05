@@ -3,48 +3,146 @@ library(data.table)
 library(fgsea)
 library(ggplot2)
 
-# load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX.RData")
-# acini_bystander <- dplyr::filter(results, Contrast == "1 - 2")
-# head(acini_bystander)
+#####
+#####CALCULATE DE
+#####CALCULATE DE
+load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX.RData")
+# If comparing structures that co-exist within a given tissue, use an LMM model 
+# with a random slope. Diagnosis is our test variable. We control for tissue 
+# sub-sampling with slide name using a random slope and intercept; the intercept adjusts for the multiple 
+# regions placed per unique tissue, since we have one tissue per slide. If multiple tissues are placed per slide, 
+# we would change the intercept variable to the unique tissue name (ex: tissue name, Block ID, etc).
+
+# convert test variables to factors
+pData(target_myData)$testRegion <- 
+  factor(pData(target_myData)$prog4)                         ###CHANGE
+pData(target_myData)[["slide"]] <-                                            ### Control for 
+  factor(pData(target_myData)[["MHL Number"]])
+assayDataElement(object = target_myData, elt = "log_q") <-
+  assayDataApply(target_myData, 2, FUN = log, base = 2, elt = "q_norm")
+
+# run LMM:
+# formula follows conventions defined by the lme4 package
+results <- c()
+for(status in c("Full ROI")) {
+  ind <- pData(target_myData)$segment == status
+  mixedOutmc <-
+    mixedModelDE(target_myData[, ind],
+                 elt = "log_q",
+                 modelFormula = ~ testRegion + (1 + testRegion | slide),        ### modelFormula =  Reaction ~ Days + (Days || Subject), sleepstudy)
+                 #modelFormula = ~ testRegion + (1 | slide),
+                 #modelFormula = ~ testRegion + (1 + testRegion | slide),
+                 groupVar = "testRegion",
+                 nCores = parallel::detectCores(),
+                 multiCore = FALSE)
+  
+  # format results as data.frame
+  r_test <- do.call(rbind, mixedOutmc["lsmeans", ])
+  tests <- rownames(r_test)
+  r_test <- as.data.frame(r_test)
+  r_test$Contrast <- tests
+  
+  # use lapply in case you have multiple levels of your test factor to
+  # correctly associate gene name with it's row in the results table
+  r_test$Gene <- 
+    unlist(lapply(colnames(mixedOutmc),
+                  rep, nrow(mixedOutmc["lsmeans", ][[1]])))
+  r_test$Subset <- status
+  r_test$FDR <- p.adjust(r_test$`Pr(>|t|)`, method = "fdr")
+  r_test <- r_test[, c("Gene", "Subset", "Contrast", "Estimate", 
+                       "Pr(>|t|)", "FDR")]
+  results <- rbind(results, r_test)
+}
+
+
+library(ggrepel) 
+# Categorize Results based on P-value & FDR for plotting
+results$Color <- "NS or FC < 0.5"
+results$Color[results$`Pr(>|t|)` < 0.05] <- "P < 0.05"
+results$Color[results$FDR < 0.05] <- "FDR < 0.05"
+results$Color[results$FDR < 0.001] <- "FDR < 0.001"
+results$Color[abs(results$Estimate) < 0.5] <- "NS or FC < 0.5"
+results$Color <- factor(results$Color,
+                        levels = c("NS or FC < 0.5", "P < 0.05",
+                                   "FDR < 0.05", "FDR < 0.001"))
+
+# pick top genes for either side of volcano to label
+# order genes for convenience:
+results$invert_P <- (-log10(results$`Pr(>|t|)`)) * sign(results$Estimate)
+top_g <- c()
+for(cond in c("Full ROI")) {
+  ind <- results$Subset == cond
+  top_g <- c(top_g,
+             results[ind, 'Gene'][
+               order(results[ind, 'invert_P'], decreasing = TRUE)[1:30]],
+             results[ind, 'Gene'][
+               order(results[ind, 'invert_P'], decreasing = FALSE)[1:30]])
+}
+top_g <- unique(top_g)
+#results <- results[, -1*ncol(results)] # remove invert_P from matrix
 
 
 
 
+
+
+#####
 library(org.Hs.eg.db)
 library(org.Mm.eg.db)
 library(AnnotationHub)
 library(GOSemSim)
 library(clusterProfiler)
 
+library(GOSemSim)
 
-# The clusterProfiler package provides the bitr() and bitr_kegg() functions for converting ID types. 
-# Both bitr() and bitr_kegg() support many species including model and many non-model organisms.
+## The clusterProfiler package provides the bitr() and bitr_kegg() functions for converting ID types. 
+## Both bitr() and bitr_kegg() support many species including model and many non-model organisms.
 
-load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_seurat.RData")
-head(target_myData@featureData@data$TargetName)
+# load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_seurat.RData")
+# head(target_myData@featureData@data$TargetName)
+# 
+# 
+# geneuniverse <- target_myData@featureData@data#$TargetName
+# geneuniverse <- dplyr::filter(geneuniverse, DetectionRate > 0.04)
+# head(geneuniverse)
+# geneuniverse <- geneuniverse$TargetName
+# geneList <- bitr(geneuniverse, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"), 
+#                  OrgDb="org.Mm.eg.db")
+# head(geneList)
+# geneList <- geneList$ENTREZID
+# head(geneList)
+# 
+# DEgenelist <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/data/progression1_MHLnumber.csv")
+# head(DEgenelist)
+# list <- DEgenelist$Gene
+# head(list)
+# eg <- bitr(list, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+#            OrgDb="org.Mm.eg.db")
+# head(eg)
+# gene <- eg$ENTREZID
+# head(gene)
 
+gene <- dplyr::filter(results, abs(results$Estimate) > 2)
+gene <- dplyr::filter(results, abs(results$FDR) < 0.05) 
+gene <- dplyr::filter(results, abs(results$FDR) < 0.001)
 
-geneuniverse <- target_myData@featureData@data#$TargetName
-geneuniverse <- dplyr::filter(geneuniverse, DetectionRate > 0.04)
-head(geneuniverse)
-geneuniverse <- geneuniverse$TargetName
-geneList <- bitr(geneuniverse, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"), 
-                 OrgDb="org.Mm.eg.db")
-head(geneList)
-geneList <- geneList$ENTREZID
-head(geneList)
-
-DEgenelist <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/data/progression1_MHLnumber.csv")
-head(DEgenelist)
-list <- DEgenelist$Gene
-head(list)
-eg <- bitr(list, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+head(gene)
+names(gene)[1] <- 'SYMBOL'
+head(gene)
+eg <- bitr(gene$SYMBOL, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
            OrgDb="org.Mm.eg.db")
 head(eg)
-gene <- eg$ENTREZID
+gene <- dplyr::left_join(gene, eg, by = "SYMBOL")
 head(gene)
 
- 
+ggo <- groupGO(gene     = gene$ENTREZID,
+               OrgDb    = org.Mm.eg.db,
+               ont      = "CC", #One of "BP", "MF", and "CC" subontologies, or "ALL" for all three.
+               level    = 3,
+               readable = TRUE)
+
+head(ggo)
+
 # GO analyses (groupGO(), enrichGO() and gseGO()) support organisms that have an 
 # OrgDb object available (see also session 2.2).
 
@@ -63,19 +161,15 @@ head(gene)
 #"MF" = molecular function
 #"CC" = cellular component
 
-#####groupGO
-ggo <- groupGO(gene     = gene,
-               OrgDb    = org.Mm.eg.db,
-               ont      = "MF", #One of "BP", "MF", and "CC" subontologies, or "ALL" for all three.
-               level    = 3,
-               readable = TRUE)
-head(ggo)
+geneList <- bitr(results$Gene, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+           OrgDb="org.Mm.eg.db")
+head(geneList)
 
 
 #####enrichGO
-ego <- enrichGO(gene          = gene,
+ego <- enrichGO(gene          = gene$ENTREZID,
                 keyType = "ENTREZID",
-                universe      = geneList, ##list of all genes?? 
+                universe      = geneList$ENTREZID, ##list of all genes?? 
                 OrgDb         = org.Mm.eg.db,
                 ont           = "BP",
                 pAdjustMethod = "BH",
@@ -86,51 +180,47 @@ head(ego)
 goplot(ego)
 dotplot(ego)
 
-p1 <- dotplot(ego, showCategory = 10, font.size=14)
-p2 <- dotplot(ego, showCategory = selected_pathways, font.size=14)
+# p1 <- dotplot(ego, showCategory = 10, font.size=14)
+# p2 <- dotplot(ego, showCategory = selected_pathways, font.size=14)
+# cowplot::plot_grid(p1, p2, labels=LETTERS[1:2])
 
 
-cowplot::plot_grid(p1, p2, labels=LETTERS[1:2])
 
 
-
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-
-BiocManager::install("GOSemSim")
 
 
 
 
 #####gseGO()
-d <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/data/progression1_MHLnumber.csv")
-head(d)
-d <- dplyr::select(d, Gene, 'Pr...t..')
-head(d)
-
-d_list <- bitr(d[,2], fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID"),
-           OrgDb="org.Mm.eg.db")
-head(d_list)
-names(d)[2] <- 'SYMBOL'
-
-d_new <- dplyr::left_join(d, d_list, by = "SYMBOL")
-head(d_new)
-
-geneList = d_new[,6]
-names(geneList) = as.character(d_new[,11])
-geneList = sort(geneList, decreasing = TRUE)
+head(gene)
+## assume 1st column is ID
+## 2nd column is FC
+## feature 1: numeric vector
+geneList = gene[,6]
 head(geneList)
+
+## feature 2: named vector
+names(geneList) = as.character(gene[,10])
+head(geneList)
+## feature 3: decreasing order
+geneList = sort(geneList, decreasing = T)
+head(geneList)
+
+#"BP" = biological process
+#"MF" = molecular function
+#"CC" = cellular component
 
 ego3 <- gseGO(geneList     = geneList, ##??
               OrgDb        = org.Mm.eg.db,
-              ont          = "CC",
+              ont          = "MF",
               minGSSize    = 100,
               maxGSSize    = 500,
               pvalueCutoff = 0.05,
               verbose      = FALSE)
 
 head(ego3)
-
+goplot(ego3)
+dotplot(ego3)
 
 
 
@@ -144,30 +234,8 @@ search_kegg_organism('mmu', by='kegg_code')
 
 
 
-load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_seurat.RData")
-geneuniverse <- target_myData@featureData@data#$TargetName
-geneuniverse <- dplyr::filter(geneuniverse, DetectionRate > 0.04)
-head(geneuniverse)
-geneuniverse <- geneuniverse$TargetName
-geneList <- bitr(geneuniverse, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"), 
-                 OrgDb="org.Mm.eg.db")
-head(geneList)
-geneList <- geneList$UNIPROT
-head(geneList)
 
-DEgenelist <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/data/progression1_MHLnumber.csv")
-head(DEgenelist)
-list <- DEgenelist$Gene
-head(list)
-eg <- bitr(list, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
-           OrgDb="org.Mm.eg.db")
-head(eg)
-gene <- eg$UNIPROT
-head(gene)
-
-
-
-kk <- enrichKEGG(gene         = gene,
+kk <- enrichKEGG(gene         = gene$UNIPROT,
                  organism     = 'mmu',
                  pvalueCutoff = 0.05)
 head(kk)
@@ -176,7 +244,7 @@ head(kk)
 
 
 
-kk2 <- gseKEGG(geneList     = geneList,
+kk2 <- gseKEGG(geneList     = gene$UNIPROT,
                organism     = 'mmu',
                minGSSize    = 120,
                pvalueCutoff = 0.05,
@@ -186,7 +254,7 @@ head(kk2)
 
 
 
-kk2 <- gseKEGG(geneList     = geneList,
+kk2 <- gseKEGG(geneList     = gene$UNIPROT,
                organism     = 'hsa',
                minGSSize    = 120,
                pvalueCutoff = 0.05,
@@ -195,6 +263,20 @@ head(kk2)
 
 ########
 ########
+########
+######## WikiPathways
+########
+########
+
+get_wp_organisms()
+
+geneList <- bitr(results$Gene, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+                 OrgDb="org.Mm.eg.db")
+head(geneList)
+head(gene)
+
+enrichWP(gene$ENTREZID, organism = "Mus musculus") 
+gseWP(geneList$ENTREZID, organism = "Mus musculus")
 
 
 
@@ -206,9 +288,16 @@ head(kk2)
 
 
 
+########
+########
+########
+######## Reactome
+########
+########
+library(ReactomePA)
 
-
-
+x <- enrichPathway(gene=gene$ENTREZID, pvalueCutoff = 0.05, readable=TRUE)
+head(x)
 
 
 
