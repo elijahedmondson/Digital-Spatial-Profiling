@@ -82,54 +82,44 @@ head(eg)
 results <- dplyr::left_join(results, eg, by = "SYMBOL")
 rm(eg)
 head(results)
+
+##Change FILENAME
 write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
 
 
-top_g <- c()
-for(cond in c("Full ROI")) {
-  ind <- results$Subset == cond
-  top_g <- c(top_g,
-             results[ind, 'SYMBOL'][
-               order(results[ind, 'invert_P'], decreasing = TRUE)[1:30]],
-             results[ind, 'SYMBOL'][
-               order(results[ind, 'invert_P'], decreasing = FALSE)[1:30]])
-}
-top_g <- unique(top_g)
-top_g
+
+
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
+
 
 
 results1 <- dplyr::filter(results, abs(results$Estimate) > 0.5)
-ids <- unique(results1$Contrast)
-
-for(i in 1:length(ids)){
-  id <- ids[i]
-  mini.df <- data.frame(results1[results1$Contrast == id, ])
-  assign(paste("df", id, sep="."), mini.df)
-}
-
-
-######
+names(results1)[6] <- 'Pr(>|t|)'
+head(results1)
+mt_list = split(results1, f = results1$Contrast)
 
 
 
-gene <- `df.4-PanINlo - 5-PanINhi`
+
+gene <- mt_list[[1]]
 head(gene)
 top_g <- c()
 for(cond in c("Full ROI")) {
-  ind <- df$Subset == cond
+  ind <- gene$Subset == cond
   top_g <- c(top_g,
-             df[ind, 'gene'][
-               order(df[ind, 'invert_P'], decreasing = TRUE)[1:30]],
-             df[ind, 'gene'][
-               order(df[ind, 'invert_P'], decreasing = FALSE)[1:30]])
+             gene[ind, 'SYMBOL'][
+               order(gene[ind, 'invert_P'], decreasing = TRUE)[1:30]],
+             gene[ind, 'SYMBOL'][
+               order(gene[ind, 'invert_P'], decreasing = FALSE)[1:30]])
 }
 top_g <- unique(top_g)
 top_g
 
-head(results1)
-head(gene)
-names(gene)[5] <- 'Pr(>|t|)'
+# head(results1)
+# head(gene)
+# names(gene)[5] <- 'Pr(>|t|)'
 
+gene <- distinct(gene, SYMBOL, .keep_all = T)
 
 pVP <- ggplot(gene,                                                             ###CHANGE
        aes(x = Estimate, y = -log10(`Pr(>|t|)`),
@@ -137,7 +127,7 @@ pVP <- ggplot(gene,                                                             
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
   geom_point() +
-  labs(x = "PanIN-hi <- log2(FC) -> PanIN-lo",                                       ###CHANGE
+  labs(x = "Bystander <- log2(FC) -> Normal Acini ",                                       ###CHANGE
        y = "Significance, -log10(P)",
        color = "Significance") +
   scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue", `FDR < 0.05` = "lightblue",
@@ -162,26 +152,26 @@ pVP <- ggplot(gene,                                                             
 #gene <- dplyr::filter(results, abs(results$FDR) < 0.001)
 
 head(gene)
-names(gene)[1] <- 'SYMBOL'
-head(gene)
-eg <- bitr(gene$SYMBOL, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
-           OrgDb="org.Mm.eg.db")
-head(eg)
-gene <- dplyr::left_join(gene, eg, by = "SYMBOL")
-rm(eg)
-head(gene)
+#names(gene)[1] <- 'SYMBOL'
+# head(gene)
+# eg <- bitr(gene$SYMBOL, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+#            OrgDb="org.Mm.eg.db")
+# head(eg)
+# gene <- dplyr::left_join(gene, eg, by = "SYMBOL")
+# rm(eg)
+# head(gene)
+# results <- distinct(results, SYMBOL, .keep_all = T)
+# universe <- bitr(results$SYMBOL, fromType="SYMBOL", 
+#                  toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+#                  OrgDb="org.Mm.eg.db")
+# head(universe)
 
-universe <- bitr(results$Gene, fromType="SYMBOL", 
-                 toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
-                 OrgDb="org.Mm.eg.db")
-head(universe)
-
-
-ggo <- groupGO(gene     = gene$ENTREZID,
-               OrgDb    = org.Mm.eg.db,
-               ont      = "CC", #One of "BP", "MF", and "CC" subontologies, or "ALL" for all three.
-               level    = 3,
-               readable = TRUE)
+# 
+# ggo <- groupGO(gene     = gene$ENTREZID,
+#                OrgDb    = org.Mm.eg.db,
+#                ont      = "CC", #One of "BP", "MF", and "CC" subontologies, or "ALL" for all three.
+#                level    = 3,
+#                readable = TRUE)
 
 
 # GO analyses (groupGO(), enrichGO() and gseGO()) support organisms that have an 
@@ -202,11 +192,12 @@ ggo <- groupGO(gene     = gene$ENTREZID,
 #"MF" = molecular function
 #"CC" = cellular component
 
+results <- distinct(results, SYMBOL, .keep_all = T)
 universe <- bitr(results$SYMBOL, fromType="SYMBOL", 
                  toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
                  OrgDb="org.Mm.eg.db")
 head(universe)
-
+head(gene)
 
 #####enrichGO
 ego <- enrichGO(gene          = gene$ENTREZID,
@@ -221,32 +212,33 @@ ego <- enrichGO(gene          = gene$ENTREZID,
 #head(ego)
 
 goplot(ego)
-pUpS <- upsetplot(ego, 8)
-
+pUpS <- upsetplot(ego, 10)
+pUpS
 pDP <- dotplot(ego)
 pDP
 
 
 wcdf<-read.table(text=ego$GeneRatio, sep = "/")[1]
 wcdf$term<-ego[,2]
-
+wcdf <- dplyr::filter(wcdf, V1 > 20)
+head(wcdf)
+wcdf <- dplyr::top_n(wcdf, 20, V1)
+#wcdf = sort(wcdf, decreasing = T)
 
 pWC <- ggplot(wcdf, aes(label = term, size = V1, 
                         color = factor(sample.int(10, nrow(wcdf), replace = TRUE)))) +
-  geom_text_wordcloud_area() +
+  geom_text_wordcloud() +
+  #geom_text_wordcloud_area() +
   theme_minimal()
 
-
-
-
-cowplot::plot_grid(pVP, pDP, pUpS, pWC, ncol=2, labels=LETTERS[1:4])#, rel_widths=c(.8, .8, 1.2))
+#cowplot::plot_grid(pVP, pDP, pUpS, pWC, ncol=2, labels=LETTERS[1:4])#, rel_widths=c(.8, .8, 1.2))
 
 first_col <- plot_grid(pVP,labels = c('A'))
 second_col <- plot_grid(pDP, pWC, ncol=1, labels = c('B','C'))
 gg_all = plot_grid(first_col, second_col, labels=c('', ''), ncol=2)
 
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-tiff("PanINhi_PanINlow.tiff", units="in", width=12, height=9, res=300)
+tiff("Bystander_Acini.tiff", units="in", width=15, height=10, res=200)
 gg_all
 dev.off()
 
@@ -255,10 +247,10 @@ head(gene)
 ## assume 1st column is ID
 ## 2nd column is FC
 ## feature 1: numeric vector
-geneList = gene[,6]
+geneList = gene[,5] #which column? 
 head(geneList)
 
-names(geneList) = as.character(gene[,10])
+names(geneList) = as.character(gene[,11])
 head(geneList)
 geneList = sort(geneList, decreasing = T)
 head(geneList)
@@ -278,7 +270,7 @@ ego3 <- gseGO(geneList     = geneList, ##??
 #head(ego3)
 goplot(ego3)
 dotplot(ego3)
-
+upsetplot(ego3, 10)
 
 
 ########
@@ -343,6 +335,7 @@ gmt <- "https://wikipathways-data.wmcloud.org/current/gmt/wikipathways-20220510-
 wp <- read.gmt.wp(gmt)
 ewp <- GSEA(geneList, TERM2GENE=wp[,c("wpid",
                                       "gene")], TERM2NAME=wp[,c("wpid", "name")])
+
 
 
 
@@ -425,8 +418,170 @@ library(enrichplot)
 library(AnnotationHub)
 library(MeSHDbi)
 
+# Data source: 
+# 1. gendoo
+# 2. gene2pubmed
+# 3. RBBH
+#
+# Category:
+# C - Diseases
+# G - Phenomena and Processes
 
 
+ah <- AnnotationHub(localHub=TRUE)
+mma <- query(ah, c("MeSHDb", "Mus musculus"))
+file_mma <- mma[[1]]
+db <- MeSHDbi::MeSHDb(file_mma)
+
+de <- names(geneList)[1:100]
+x <- enrichMeSH(de, MeSHDb = db, database='gendoo', category = 'C')
+head(x)
+
+y <- gseMeSH(geneList, MeSHDb = db, database = 'gene2pubmed', category = "G")
+head(y)
+
+########
+########
+########
+######## MSigDb analysis
+########
+########
+
+# H: hallmark gene sets
+# C1: positional gene sets
+# C2: curated gene sets
+# C3: motif gene sets
+# C4: computational gene sets
+# C5: GO gene sets
+# C6: oncogenic signatures
+# C7: immunologic signatures
+
+library(msigdbr)
+msigdbr_show_species()
+
+m_t2g <- "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/msigdb.v7.5.1.entrez.gmt"
+
+# all gene sets
+# m_df <- msigdbr(species = "Mus musculus")
+# head(m_df, 2) %>% as.data.frame
+
+m_t2g <- msigdbr(species = "Mus musculus", category = "C7") %>% 
+  dplyr::select(gs_name, entrez_gene)
+head(m_t2g)
+
+head(gene)
+em <- enricher(gene$ENTREZID, TERM2GENE=m_t2g)
+head(em)
+
+em2 <- GSEA(geneList, TERM2GENE = m_t2g)
+head(em2)
+
+dotplot(em, showCategory=20) + ggtitle("dotplot for ORA")
+dotplot(em2, showCategory=20) + ggtitle("dotplot for GSEA")
+
+
+## convert gene ID to Symbol
+edox <- setReadable(ego, 'org.Mm.eg.db', 'ENTREZID')
+p1 <- cnetplot(edox, foldChange=geneList)
+## categorySize can be scaled by 'pvalue' or 'geneNum'
+p2 <- cnetplot(edox, categorySize="pvalue", foldChange=geneList)
+p3 <- cnetplot(edox, foldChange=geneList, circular = TRUE, colorEdge = TRUE) 
+cowplot::plot_grid(p1, p2, p3, ncol=3, labels=LETTERS[1:3], rel_widths=c(.8, .8, 1.2))
+
+
+p1 <- cnetplot(edox, node_label="category", 
+               cex_label_category = 1.2) 
+p2 <- cnetplot(edox, node_label="gene", 
+               cex_label_gene = 0.8) 
+p3 <- cnetplot(edox, node_label="all") 
+p4 <- cnetplot(edox, node_label="none", 
+               color_category='firebrick', 
+               color_gene='steelblue') 
+cowplot::plot_grid(p1, p2, p3, p4, ncol=2, labels=LETTERS[1:4])
+
+
+########
+########
+########
+######## Biological Theme Comparison
+########
+########
+
+# Use a named list of gene IDs as the input that passed to the 
+# geneCluster parameter.
+
+#gcSample =  list of different samples
+results2 <- dplyr::select(results1, Estimate, Contrast, ENTREZID)
+results2 <- dplyr::filter(results2, Contrast == c("1-Normal acini - 3-ADM",
+                                                 "3-ADM - 4-PanINlo",
+                                                 "4-PanINlo - 5-PanINhi",
+                                                 "5-PanINhi - 6-PDAC",
+                                                 "4-PanINlo - 6-PDAC",
+                                                 "5-PanINhi - 7-metastasis"))
+                                                 
+head(results2)
+mt_list = split(results2, f = results2$Contrast)
+
+results2$ENTREZID
+str(mt_list)
+
+ids <- unique(results2$Contrast)
+mt_list1<-list()
+for(i in 1:length(ids)){
+  id <- ids[i]
+  df <- dplyr::filter(results2, results2$Contrast == id)
+  mt_list1[[i]]<-  df$ENTREZID
+  }
+
+
+mt_list1 <- dplyr::select(mt_list, ENTREZID)
+str(mt_list1)
+
+ck <- compareCluster(geneCluster = mt_list1, 
+                     fun = enrichGO, #"groupGO", "enrichGO", "enrichKEGG", "enrichDO" or "enrichPathway"
+                     OrgDb = org.Mm.eg.db)
+ck <- setReadable(ck, OrgDb = org.Mm.eg.db, keyType="ENTREZID")
+head(ck) 
+
+
+dotplot(ck)
+# As an alternaitve to using named list, the compareCluster() function also 
+# supports passing a formula to describe more complicated experimental designs 
+# (e.g., Gene ~ time + tx).
+
+
+
+head(results2)
+# geneList = results2[,1] #which column? 
+# head(geneList)
+# 
+# names(geneList) = as.character(results2[,3])
+# head(geneList)
+# geneList = sort(geneList, decreasing = T)
+# head(geneList)
+
+
+# 
+# mydf <- data.frame(Entrez=names(geneList), FC=geneList)
+# mydf <- mydf[abs(mydf$FC) > 1,]
+# mydf$group <- results$Contrast
+# mydf$group[mydf$FC < 0] <- "downregulated"
+# mydf$othergroup <- "A"
+# mydf$othergroup[abs(mydf$FC) > 2] <- "B"
+
+formula_res <- compareCluster(ENTREZID~Contrast, data=results2, 
+                              fun="enrichGO", OrgDb = org.Mm.eg.db, 
+                              keyType="ENTREZID")
+
+head(formula_res)
+dotplot(formula_res)
+formula_res <- setReadable(formula_res, 'org.Mm.eg.db', 'ENTREZID')
+cnetplot(formula_res, node_label="category", 
+         cex_label_category = 1.2) 
+cnetplot(formula_res, node_label="gene", 
+         cex_label_category = 1.2) 
+cnetplot(formula_res, node_label="all", 
+         cex_label_category = 1.2) 
 
 
 
@@ -436,6 +591,7 @@ library(MeSHDbi)
 ######## Visualization
 ########
 ########
+
 library(enrichplot)
 
 
