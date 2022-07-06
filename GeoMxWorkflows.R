@@ -24,7 +24,7 @@ library(NanoStringNCTools)
 library(GeomxTools)
 library(readxl)
 
-####
+#####
 
 
 knitr::opts_chunk$set(echo = TRUE)
@@ -331,34 +331,34 @@ target_myData@phenoData@data$dx
 # select the annotations we want to show, use `` to surround column names with
 # spaces or special symbols
 
-count_mat <- count(pData(myData), `Position`, Class, Origin, Sex, Age, Strain, Call, dx)
-# simplify the slide names
-count_mat$`core` <- gsub("disease", "d",
-                         gsub("normal", "n", count_mat$`Position`))
-# gather the data and plot in order: class, slide name, region, segment
-test_gr <- gather_set_data(count_mat, 1:7)
-test_gr$x <- factor(test_gr$x,
-                    levels = c("Strain","Sex", "Age", "Position", "Class","Origin", "Call"))
-# plot Sankey
-sampleoverview2 <- ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
-  geom_parallel_sets(aes(fill = dx), alpha = 0.5, axis.width = 0.1) +
-  geom_parallel_sets_axes(axis.width = 0.2) +
-  geom_parallel_sets_labels(color = "white", size = 4) +
-  theme_classic(base_size = 17) + 
-  theme(legend.position = "bottom",
-        axis.ticks.y = element_blank(),
-        axis.line = element_blank(),
-        axis.text.y = element_blank()) +
-  scale_y_continuous(expand = expansion(0)) + 
-  scale_x_discrete(expand = expansion(0)) +
-  labs(x = "", y = "") +
-  annotate(geom = "segment", x = 7.25, xend = 7.25,
-           y = 0, yend = 20, lwd = 2) +
-  annotate(geom = "text", x = 7.19, y = 7.8, angle = 90, size = 4,
-           hjust = 0.5, label = "20 segments")
-
-
-sampleoverview2
+# count_mat <- count(pData(myData), `Position`, Class, Origin, Sex, Age, Strain, Call, dx)
+# # simplify the slide names
+# count_mat$`core` <- gsub("disease", "d",
+#                          gsub("normal", "n", count_mat$`Position`))
+# # gather the data and plot in order: class, slide name, region, segment
+# test_gr <- gather_set_data(count_mat, 1:7)
+# test_gr$x <- factor(test_gr$x,
+#                     levels = c("Strain","Sex", "Age", "Position", "Class","Origin", "Call"))
+# # plot Sankey
+# sampleoverview2 <- ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
+#   geom_parallel_sets(aes(fill = dx), alpha = 0.5, axis.width = 0.1) +
+#   geom_parallel_sets_axes(axis.width = 0.2) +
+#   geom_parallel_sets_labels(color = "white", size = 4) +
+#   theme_classic(base_size = 17) + 
+#   theme(legend.position = "bottom",
+#         axis.ticks.y = element_blank(),
+#         axis.line = element_blank(),
+#         axis.text.y = element_blank()) +
+#   scale_y_continuous(expand = expansion(0)) + 
+#   scale_x_discrete(expand = expansion(0)) +
+#   labs(x = "", y = "") +
+#   annotate(geom = "segment", x = 7.25, xend = 7.25,
+#            y = 0, yend = 20, lwd = 2) +
+#   annotate(geom = "text", x = 7.19, y = 7.8, angle = 90, size = 4,
+#            hjust = 0.5, label = "20 segments")
+# 
+# 
+# sampleoverview2
 
 # setwd("C:/Users/edmondsonef/Desktop/R-plots/")
 # tiff("sampleoverview2.tiff", units="in", width=19, height=15, res=150)
@@ -379,14 +379,6 @@ sampleoverview2
 ## ----goi detection------------------------------------------------------------
 
 
-
-
-
-
-
-
-
-
 library(scales) # for percent
 
 # Calculate detection rate:
@@ -405,15 +397,15 @@ goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam","Cre",
          "Fap","Hnf1b","Krt19","Ctrb1", "Hes1", "Smad4",
          "Onecut1","Onecut2","Onecut3","Cdkn1a","Prss2","Runx1","Gata6",
          "Gata6", "S100a11", "Nr5a2","Agr2", "Foxa2", "Fosl1","Ets2", "Runx3")
-
-goi.acini <- c("Ctrb1","Cpa1","Gata6","Bhlha15","Nr5a2","Ptf1a")
-goi.duct <- c("Hnf1b","Sox9","Krt19","Gata6","Onecut1")
-goi.ADM <- c("Cpa1","Gata6","Sox9","Onecut1","Neurog3","Nr5a2","Ptf1a","Pdx1")
-goi.PanIN <- c("Hes1","Dclk1","Sox9","Gata6","Ptf1a","Pdx1")
-goi.PDAC <- c("Dclk1","Pdx1")
-goi.PDACfromDuct <- "Agr2"
-goi.met <- c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")
-
+# 
+# goi.acini <- c("Ctrb1","Cpa1","Gata6","Bhlha15","Nr5a2","Ptf1a")
+# goi.duct <- c("Hnf1b","Sox9","Krt19","Gata6","Onecut1")
+# goi.ADM <- c("Cpa1","Gata6","Sox9","Onecut1","Neurog3","Nr5a2","Ptf1a","Pdx1")
+# goi.PanIN <- c("Hes1","Dclk1","Sox9","Gata6","Ptf1a","Pdx1")
+# goi.PDAC <- c("Dclk1","Pdx1")
+# goi.PDACfromDuct <- "Agr2"
+# goi.met <- c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")
+# 
 
 
 #hnf6 = Onecut1
@@ -458,7 +450,7 @@ ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
 negativeProbefData <- subset(fData(target_myData), CodeClass == "Negative")
 neg_probes <- unique(negativeProbefData$TargetName)
 target_myData <- 
-  target_myData[fData(target_myData)$DetectionRate >= 0.03 |                    ########EFE change to include additional genes? 
+  target_myData[fData(target_myData)$DetectionRate >= 0.035 |                    ########EFE change to include additional genes? 
                     fData(target_myData)$TargetName %in% neg_probes, ]
 dim(target_myData)
 
@@ -526,20 +518,20 @@ target_myData <- normalize(target_myData , data_type = "RNA",
 
 ## ----normplot, fig.small = TRUE-----------------------------------------------
 # visualize the first 10 segments with each normalization method
-boxplot(exprs(target_myData)[,1:77],
-        col = "#9EDAE5", main = "Raw Counts",
-        log = "y", names = 1:77, xlab = "Segment",
-        ylab = "Counts, Raw")
-
-boxplot(assayDataElement(target_myData[,1:77], elt = "q_norm"),
-        col = "#2CA02C", main = "Q3 Norm Counts",
-        log = "y", names = 1:77, xlab = "Segment",
-        ylab = "Counts, Q3 Normalized")
-
-boxplot(assayDataElement(target_myData[,1:77], elt = "neg_norm"),
-        col = "#FF7F0E", main = "Neg Norm Counts",
-        log = "y", names = 1:77, xlab = "Segment",
-        ylab = "Counts, Neg. Normalized")
+# boxplot(exprs(target_myData)[,1:77],
+#         col = "#9EDAE5", main = "Raw Counts",
+#         log = "y", names = 1:77, xlab = "Segment",
+#         ylab = "Counts, Raw")
+# 
+# boxplot(assayDataElement(target_myData[,1:77], elt = "q_norm"),
+#         col = "#2CA02C", main = "Q3 Norm Counts",
+#         log = "y", names = 1:77, xlab = "Segment",
+#         ylab = "Counts, Q3 Normalized")
+# 
+# boxplot(assayDataElement(target_myData[,1:77], elt = "neg_norm"),
+#         col = "#FF7F0E", main = "Neg Norm Counts",
+#         log = "y", names = 1:77, xlab = "Segment",
+#         ylab = "Counts, Neg. Normalized")
 
 ## ----dimReduction, eval = TRUE------------------------------------------------
 library(umap)
@@ -554,9 +546,10 @@ umap_out <-
        config = custom_umap)
 pData(target_myData)[, c("UMAP1", "UMAP2")] <- umap_out$layout[, c(1,2)]
 ggplot(pData(target_myData),
-       aes(x = UMAP1, y = UMAP2, color = progression1, shape = Call, label=dsxf)) +
+       aes(x = UMAP1, y = UMAP2, color = comps, shape = Call, label=dsxf)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
-  theme_bw()
+  theme_bw()+
+  theme(legend.position="none")
 
 # run tSNE
 set.seed(42) # set the seed for tSNE as well
@@ -565,9 +558,10 @@ tsne_out <-
         perplexity = ncol(target_myData)*.15)
 pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_myData),
-       aes(x = tSNE1, y = tSNE2, color = progression3, shape = Call, label=dsxf)) +
+       aes(x = tSNE1, y = tSNE2, color = comps, shape = Call, label=dsxf)) +
   geom_point(size = 3) +geom_text(hjust=1.1, vjust=0.2)+
-  theme_bw()
+  theme_bw()+
+  theme(legend.position="none")
 
 
 ## run PCA
@@ -583,7 +577,7 @@ percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
 
 
 ggplot(pData(target_myData),
-               aes(x = PC1, y = PC2, color=progression1, label=dsxf)) +
+               aes(x = PC1, y = PC2, color=comps, label=dsxf)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
@@ -622,9 +616,26 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
          annotation_col = 
            pData(target_myData)[, c("dx2", "Sex","Strain")])
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## ----Differential Expression----
 
-load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX.RData")
+load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX_new.RData")
 # If comparing structures that co-exist within a given tissue, use an LMM model 
 # with a random slope. Diagnosis is our test variable. We control for tissue 
 # sub-sampling with slide name using a random slope and intercept; the intercept adjusts for the multiple 
@@ -633,7 +644,7 @@ load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX.RData")
 
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$prog4)#, c("4-PanINlo","5-PanINhi"))                           ###CHANGE
+  factor(pData(target_myData)$comps)#, c("4-PanINlo","5-PanINhi"))                           ###CHANGE
 pData(target_myData)[["slide"]] <-                                            ### Control for 
   factor(pData(target_myData)[["MHL Number"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
@@ -737,7 +748,7 @@ head(acini_bystander)
 
 
 # Graph results
-ggplot(results1,                                                             ###CHANGE
+ggplot(results,                                                             ###CHANGE
        aes(x = Estimate, y = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
@@ -750,7 +761,7 @@ ggplot(results1,                                                             ###
                                 `P < 0.05` = "orange2",`NS or FC < 0.5` = "gray"),
                      guide = guide_legend(override.aes = list(size = 4))) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
-  geom_text_repel(data = subset(results1, Gene %in% top_g & FDR < 0.05),
+  geom_text_repel(data = subset(results, Gene %in% top_g & FDR < 0.05),
                   size = 4, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2,
                   max.overlaps = 50) +
