@@ -11,6 +11,13 @@ library(clusterProfiler)
 library(GOSemSim)
 library(ggwordcloud)
 
+library(knitr)
+library(dplyr)
+library(ggforce)
+library(GeoMxWorkflows)
+library(NanoStringNCTools)
+library(GeomxTools)
+library(readxl)
 #####
 #####CALCULATE DE
 #####CALCULATE DE
@@ -84,13 +91,13 @@ rm(eg)
 head(results)
 
 ##Change FILENAME
-write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
+#write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_WITH.int.csv")
 
 
 
 
 results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
-
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_WITH.int.csv")
 
 
 results1 <- dplyr::filter(results, abs(results$Estimate) > 0.5)
