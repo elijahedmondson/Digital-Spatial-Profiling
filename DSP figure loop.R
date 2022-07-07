@@ -25,8 +25,8 @@ library(msigdbr)
 
 datadir <-"C:/Users/edmondsonef/Desktop/DSP GeoMX/data/WTA_04122022/figures/"
 setwd(datadir)
-#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
-results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_WITH.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_WITH.int.csv")
 universe <- distinct(results, SYMBOL, .keep_all = T)
 
 results.sig <- dplyr::filter(results, abs(results$Estimate) > 0.5)
@@ -43,13 +43,12 @@ m_t2g <- "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/msig
 
 #options(warn = 0)
 
-#16 = 3-ADM - 4-PanINlo
 
 ##FOR LOOP
 
-for(i in 17:36){
+for(i in 1:6){
   suffix <- names(mt_list[i])
-  outname <-paste0(suffix, "_comps_MHL_with_int")
+  outname <-paste0(suffix, "_comps_MHL_no_int")
   
   gene <- mt_list[[i]]
   gene <- distinct(gene, SYMBOL, .keep_all = T)
@@ -90,7 +89,7 @@ for(i in 17:36){
                                   `P < 0.05` = "orange2",`NS or FC < 0.5` = "gray"),
                        guide = guide_legend(override.aes = list(size = 4))) +
     scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
-    geom_text_repel(data = subset(gene, SYMBOL %in% top_g & FDR < 0.05),
+    geom_text_repel(data = subset(gene, SYMBOL %in% top_g & `Pr(>|t|)` < 0.05),
                     size = 4, point.padding = 0.15, color = "black",
                     min.segment.length = .1, box.padding = .2, lwd = 2,
                     max.overlaps = 50) +
@@ -144,7 +143,7 @@ for(i in 17:36){
   
   ego <- gseGO(geneList      = geneList, 
                 OrgDb        = org.Mm.eg.db,
-                ont          = "MF", #"BP", "MF", and "CC"
+                ont          = "BP", #"BP", "MF", and "CC"
                 minGSSize    = 50,
                 maxGSSize    = 500,
                 pvalueCutoff = 0.05,
@@ -154,7 +153,7 @@ for(i in 17:36){
   p3 <- upsetplot(ego, 10)
   gg_all <- cowplot::plot_grid(p1, p2, p3, ncol=1, labels=LETTERS[1:3])
   
-  multiplot <- paste0(datadir, "_", outname, "_gseGO_MF.png")
+  multiplot <- paste0(datadir, "_", outname, "_gseGO_BP.png")
   ggsave(gg_all, file=multiplot, width = 15, height = 15, units = "in", bg = "white")
   rm(ego,gg_all, p1, p2, p3)
 
@@ -189,7 +188,7 @@ for(i in 17:36){
   # C5: GO gene sets            --good
   # C6: oncogenic signatures    --good
   # C7: immunologic signatures  --good
-  msig_list <- c("H", "C2", "C3", "C5", "C6", "C7")
+  msig_list <- c("C2", "C3", "C5", "C6", "C7", "H")
   
   for(j in 1:6){
     Msig <- msig_list[j]
