@@ -59,10 +59,12 @@ library(readxl)
 
 
 
-myData <- readRDS(file = "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/my_data.rds")
-target_myData <- readRDS(file = "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/target_myData.rds")
-Pancreas_MCA <- readRDS(file = "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/Pancreas_MCA.RData")
+# myData <- readRDS(file = "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/my_data.rds")
+# target_myData <- readRDS(file = "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/target_myData.rds")
+# Pancreas_MCA <- readRDS(file = "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/Pancreas_MCA.RData")
+
 load("C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/Pancreas_MCA.RData")
+load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX_new.RData")
 
 dim(myData)
 
@@ -73,14 +75,11 @@ head(pData(target_myData))
 
 target_myData@assayData$exprs[seq_len(5), seq_len(5)]
 
-sampleNames(target_myData) <- paste0(target_myData$ID, target_myData$class)
+sampleNames(target_myData) <- paste0(target_myData$dxIPMN2, "-", target_myData$ID)
 
-bg = derive_GeoMx_background(norm = target_myData@assayData$exprs_norm,  ### COULDN'T FIND exprs_norm?  neg norm negFac
+bg = derive_GeoMx_background(norm = target_myData@assayData$q_norm,  ### COULDN'T FIND exprs_norm?  neg norm negFac
                              probepool = fData(target_myData)$Module,
                              negnames = target_myData@featureData@data$Negative)
-# bg = derive_GeoMx_background(norm = nsclc@assayData$exprs_norm,
-#                              probepool = fData(nsclc)$Module,
-#                              negnames = c("NegProbe-CTP01", "NegProbe-Kilo"))
 
 
 
@@ -100,7 +99,7 @@ heatmap(sweep(mousepanc, 1, apply(mousepanc, 1, max), "/"),
 
 
 res = runspatialdecon(object = target_myData,
-                      norm_elt = "neg_norm", #q_norm
+                      norm_elt = "q_norm", #neg_norm
                       raw_elt = "exprs",
                       cell_counts = target_myData@phenoData@data$nuclei,
                       X = mousepanc,
@@ -186,7 +185,7 @@ collapsed = runCollapseCellTypes(object = res,
 
 
 heatmap(t(collapsed$beta), #cexRow = 0.85, cexCol = 0.75,
-        labCol = res$dx)
+        labCol = res$dxIPMN2)
 
 
 o = hclust(dist(t(collapsed$cell.counts$cell.counts)))$order
@@ -205,17 +204,14 @@ TIL_barplot(t(collapsed$prop_of_all),
 colnames(collapsed$beta)
 str(pData(collapsed))
 
-Islet <- pData(collapsed)[ which(collapsed$dx=='Normal Islet'), ]
+ddd <- pData(collapsed)[ which(collapsed$dxIPMN3=='IPMN'), ]
 
-o = hclust(dist(t(Islet$cell.counts$cell.counts)))$order
-layout(mat = (matrix(c(1, 2), 1)), widths = c(9, 4))
-TIL_barplot(t(Islet$prop_of_all), 
+o = hclust(dist(t(ddd$cell.counts$cell.counts)))$order
+layout(mat = (matrix(c(1, 2), 1)), widths = c(7, 3))
+TIL_barplot(t(ddd$prop_of_all), 
             draw_legend = TRUE, 
             cex.names = 0.75,
-            main = "Normal Islet")
-
-
-
+            main = "IPMN")
 
 
 
@@ -234,11 +230,11 @@ pc = prcomp(t(log2(pmax(collapsed@assayData$q_norm, 1))))$x[, c(1, 2)]
 
 # run florets function:
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-tiff("PCA with florets.tiff", units="in", width=13, height=8, res=250)
+tiff("PCA with florets_list.tiff", units="in", width=13, height=8, res=250)
 par(mar = c(5,5,1,1))
 layout(mat = (matrix(c(1, 2), 1)), widths = c(6, 2))
 florets(x = pc[, 1], y = pc[, 2],
-        b = t(collapsed$beta), cex = .75,
+        b = t(collapsed$beta), cex = 1.5,
         xlab = "PC1", ylab = "PC2")
 par(mar = c(0,0,0,0))
 frame()
@@ -258,7 +254,7 @@ dev.off()
 
 
 res = runspatialdecon(object = target_myData,
-                      norm_elt = "neg_norm", #q_norm
+                      norm_elt = "q_norm", #q_norm
                       raw_elt = "exprs",
                       cell_counts = target_myData@phenoData@data$nuclei,
                       X = mousepanc,
@@ -270,7 +266,7 @@ res = runspatialdecon(object = target_myData,
 
 
 rdecon = runReverseDecon(object = target_myData,
-                         norm_elt = "neg_norm",
+                         norm_elt = "q_norm",
                          beta = collapsed$beta)
 str(fData(rdecon))
 #> 'data.frame':    1700 obs. of  12 variables:
@@ -295,10 +291,17 @@ names(rdecon@assayData)
 # look at the residuals:
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
 tiff("ReverseDeconvolution.tiff", units="in", width=20, height=20, res=300)
-heatmap(pmax(pmin(rdecon@assayData$resids, 2), -2), labCol = res$dx)
+heatmap(pmax(pmin(rdecon@assayData$resids, 2), -2), labCol = res$dxIPMN3)
 dev.off()
 
-
+goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam","Cre",
+                   "Krt18", "Notch1", "Notch2", "Notch3", "Notch4","Cldn8",
+                    "Cdk6","Msh3","Myc","Mastl", "Sox2","Cav1","Fosl1","Gata4",
+                    "Cldn18","Capn6","Cpa1","Muc5ac","Tff1","Smad4","Sox9",
+                    "Ptf1a","Pdx1","Nr5a2","Neurog3","Bhlha15","Krt19","Dclk1",
+                    "Elastase","Hnf1b","Krt19","Ngn3","Ctrb1", "Hes1", "Smad4",
+                    "Onecut1","Onecut2","Onecut3","Cdkn1a","Prss2","Runx1","Gata6",
+                    "Gata6", "S100a11", "Nr5a2","Agr2", "Foxa2", "Fosl1","Ets2", "Runx3")
 
 # look at the two metrics of goodness-of-fit:
 plot(fData(rdecon)$cors, fData(rdecon)$resid.sd, col = 0)

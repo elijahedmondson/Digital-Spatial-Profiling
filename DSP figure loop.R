@@ -23,11 +23,15 @@ library(ReactomePA)
 library(DOSE)
 library(msigdbr)
 
-datadir <-"C:/Users/edmondsonef/Desktop/DSP GeoMX/data/WTA_04122022/figures/"
+datadir <-"C:/Users/edmondsonef/Desktop/DSP GeoMX/Results/"
 setwd(datadir)
-results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
-#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_WITH.int.csv")
+
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
+
 universe <- distinct(results, SYMBOL, .keep_all = T)
+m_t2g <- "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/msigdb.v7.5.1.entrez.gmt"
 
 results.sig <- dplyr::filter(results, abs(results$Estimate) > 0.5)
 head(results.sig)
@@ -37,18 +41,20 @@ head(results.sig)
 mt_list = split(results.sig, f = results.sig$Contrast)
 names(mt_list)
 
-gmt <- "https://wikipathways-data.wmcloud.org/current/gmt/wikipathways-20220510-gmt-Mus_musculus.gmt"
-wp <- read.gmt.wp(gmt)
-m_t2g <- "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/msigdb.v7.5.1.entrez.gmt"
+#gmt <- "https://wikipathways-data.wmcloud.org/current/gmt/wikipathways-20220510-gmt-Mus_musculus.gmt"
+#wp <- read.gmt.wp(gmt)
+
 
 #options(warn = 0)
+
+names(mt_list)
 
 
 ##FOR LOOP
 
-for(i in 1:6){
+for(i in 28:28){
   suffix <- names(mt_list[i])
-  outname <-paste0(suffix, "_comps_MHL_no_int")
+  outname <-paste0(suffix, "_class_MHL_no_int")
   
   gene <- mt_list[[i]]
   gene <- distinct(gene, SYMBOL, .keep_all = T)
@@ -188,7 +194,7 @@ for(i in 1:6){
   # C5: GO gene sets            --good
   # C6: oncogenic signatures    --good
   # C7: immunologic signatures  --good
-  msig_list <- c("C2", "C3", "C5", "C6", "C7", "H")
+  msig_list <- c("C2", "C6", "C7", "H", "C5", "C3")
   
   for(j in 1:6){
     Msig <- msig_list[j]

@@ -33,7 +33,7 @@ load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX_new.RData")
 
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$comps)#, c("Stroma-PanIN","Stroma-nontum"))                           ###CHANGE
+  factor(pData(target_myData)$class)#, c("Stroma-PanIN","Stroma-nontum"))                           ###CHANGE
 pData(target_myData)[["slide"]] <-                                            ### Control for 
   factor(pData(target_myData)[["MHL Number"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
@@ -46,8 +46,8 @@ for(status in c("Full ROI")) {
   ind <- pData(target_myData)$segment == status
   mixedOutmc <-
     mixedModelDE(target_myData[, ind], elt = "log_q",
-                 modelFormula = ~ testRegion + (1 + testRegion | slide),        ### modelFormula =  Reaction ~ Days + (Days || Subject), sleepstudy)
-                 #modelFormula = ~ testRegion + (1 | slide),
+                 #modelFormula = ~ testRegion + (1 + testRegion | slide),        ### =Reaction ~ Days + (Days || Subject), sleepstudy)
+                 modelFormula = ~ testRegion + (1 | slide),
                  groupVar = "testRegion", nCores = parallel::detectCores(),
                  multiCore = FALSE)
   r_test <- do.call(rbind, mixedOutmc["lsmeans", ])
@@ -91,14 +91,11 @@ rm(eg)
 head(results)
 
 ##Change FILENAME
-#write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_WITH.int.csv")
+write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/07.08.22_class_MHL_no_int.csv")
 
-
-
-
-results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
-results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_WITH.int.csv")
-
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_WITH.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.08.22_class_MHL_no_int.csv")
 
 results1 <- dplyr::filter(results, abs(results$Estimate) > 0.5)
 names(results1)[6] <- 'Pr(>|t|)'

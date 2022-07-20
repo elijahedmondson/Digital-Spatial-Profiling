@@ -635,7 +635,7 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
 
 ## ----Differential Expression----
 
-load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX_new.RData")
+load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
 # If comparing structures that co-exist within a given tissue, use an LMM model 
 # with a random slope. Diagnosis is our test variable. We control for tissue 
 # sub-sampling with slide name using a random slope and intercept; the intercept adjusts for the multiple 
@@ -795,19 +795,21 @@ dev.off()
 
 ## ----targetTable, eval = TRUE, as.is = TRUE-----------------------------------
 
-
+head(results)
+names(results)[2] <- 'Gene'
+head(results)
 
 kable(subset(results, Gene %in% c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")), row.names = FALSE)
 kable(subset(results, Gene %in% c("Pdzd8")), row.names = FALSE)
 ## ----targetExprs, eval = TRUE-------------------------------------------------
 # show expression for a single target: PDHA1
 ggplot(pData(target_myData),
-       aes(x = progression1, fill = progression1,
-           y = assayDataElement(target_myData["Soat1", ],
+       aes(x = class, fill = class,
+           y = assayDataElement(target_myData["Agr2", ],
                                 elt = "q_norm"))) +
   geom_violin() +
   geom_jitter(width = .2) +
-  labs(y = "Soat1 Expression") +
+  labs(y = "Agr2 Expression") +
   scale_y_continuous(trans = "log2") +
   #facet_wrap(~class) +
   theme_bw()
