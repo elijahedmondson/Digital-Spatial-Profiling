@@ -22,7 +22,7 @@ head(mySeurat@misc$QCMetrics$QCFlags) # QC metrics
 head(mySeurat@assays$GeoMx@meta.features) # gene metadata
 VlnPlot(mySeurat, features = "nCount_GeoMx", pt.size = 5)
 
-mySeurat <- as.Seurat.NanoStringGeoMxSet(target_myData, normData = "q_norm", ident = "progression1")
+mySeurat <- as.Seurat.NanoStringGeoMxSet(target_myData, normData = "q_norm", ident = "comps")
 VlnPlot(mySeurat, features = "nCount_GeoMx", pt.size = 5)
 
 
@@ -35,7 +35,7 @@ mySeurat <- FindNeighbors(mySeurat, reduction = "pca", dims = seq_len(30))
 #mySeurat <- FindClusters(mySeurat, verbose = FALSE)
 mySeurat <- RunUMAP(mySeurat, reduction = "pca", dims = seq_len(30))
 
-DimPlot(mySeurat, reduction = "umap", pt.size = 5, label = TRUE, group.by = "dx")
+DimPlot(mySeurat, reduction = "umap", pt.size = 5, label = TRUE, group.by = "comps")
 
 
 levels(mySeurat)
@@ -72,11 +72,13 @@ RidgePlot(mySeurat, features = features, ncol = 5)
 levels(mySeurat)
 
 # Find differentially expressed features between CD14+ and FCGR3A+ Monocytes
-PanINlo.hi.de <- FindMarkers(mySeurat, ident.1 = "4-PanINlo", ident.2 = "5-PanINhi")
 
+#NormlizeData() before "FindMarkers()
+de_markers <- FindMarkers(mySeurat, ident.1 = "5-PanINhi", ident.2 = "4-PanINlo", 
+                                  test.use = "negbinom")
 
-PanINlo.hi.de <- FindMarkers(mySeurat, ident.1 = "4-PanINlo", ident.2 = "5-PanINhi", 
-                                  test.use = "MAST")
+de_markers <- FindAllMarkers(mySeurat, ident.1 = "5-PanINhi", ident.2 = "4-PanINlo", 
+                             test.use = "negbinom")
 
 # test.use = 
 # "wilcox"
@@ -84,15 +86,29 @@ PanINlo.hi.de <- FindMarkers(mySeurat, ident.1 = "4-PanINlo", ident.2 = "5-PanIN
 # "roc"
 # "t"
 # "poisson"
-# "negbinom"
+# "negbinom" -- appropriate for count
 # "LR"
 # "MAST" 
-# "DESeq2"
+# "DESeq2" -- appropriate for count -- need to initialize the mySeurate with count matrix
 
+# 
+# I partly figured this out and thought I would update in case someone else 
+# comes looking with the same issue.
+# 
+# It seems that I was getting crazy LogFC's and weird looking volcanoes because 
+# of a problem with the normalization of my data. For these analyses I had used 
+# the Seurat "SCT integration" pipeline as outlined here: 
+# https://satijalab.org/seurat/v3.2/integration.html
+# 
+# I probably did something wrong, but after triple checking the workflow, I 
+# couldn't find it. When I switched back to an integration workflow that 
+# includes log normalization, rather than SCT normalization, everything 
+# appears to be fixed.
+# 
+# So in the end, I am unsure of why the SCT integration pipeline failed 
+# on me, but switching to log normalization was the solution to my problem.
 
-
-
-results <- PanINlo.hi.de
+results <- de_markers
 library(tibble)
 results <- tibble::rownames_to_column(results, "Gene")
 results <- dplyr::filter(results, p_val < 0.05)
@@ -113,8 +129,8 @@ results$Color <- factor(results$Color,
 results$invert_P <- (-log10(results$p_val)) * sign(results$avg_log2FC)
 top_g <- c()
 top_g <- c(top_g,
-             head(results[, 'Gene'][order(results[,'invert_P'], decreasing= T)[1:30]]),
-             head(results[, 'Gene'][order(results[,'invert_P'], decreasing= F)[1:30]]))
+             results[, 'Gene'][order(results[,'invert_P'], decreasing= T)[1:50]],
+             results[, 'Gene'][order(results[,'invert_P'], decreasing= F)[1:50]])
   
 top_g <- unique(top_g)
 
