@@ -22,7 +22,7 @@ library(readxl)
 #####CALCULATE DE
 #####CALCULATE DE
 #####
-load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX_new.RData")
+load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
 
 # If comparing structures that co-exist within a given tissue, use an LMM model 
 # with a random slope. Diagnosis is our test variable. We control for tissue 
@@ -33,9 +33,9 @@ load("C:/Users/edmondsonef/Desktop/DSP GeoMx/KPC_geoMX_new.RData")
 
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$class)#, c("Stroma-PanIN","Stroma-nontum"))                           ###CHANGE
+  factor(pData(target_myData)$metastasis3)#, c("Stroma-PanIN","Stroma-nontum"))                           ###CHANGE
 pData(target_myData)[["slide"]] <-                                            ### Control for 
-  factor(pData(target_myData)[["MHL Number"]])
+  factor(pData(target_myData)[["tissue"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
   assayDataApply(target_myData, 2, FUN = log, base = 2, elt = "q_norm")
 
@@ -91,20 +91,21 @@ rm(eg)
 head(results)
 
 ##Change FILENAME
-write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/07.08.22_class_MHL_no_int.csv")
+#write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/07.08.22_class_MHL_no_int.csv")
 
-#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_no.int.csv")
-#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.06.22_comps_MHL_WITH.int.csv")
-results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/07.08.22_class_MHL_no_int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
 
 results1 <- dplyr::filter(results, abs(results$Estimate) > 0.5)
-names(results1)[6] <- 'Pr(>|t|)'
+head(results1)
+#names(results1)[6] <- 'Pr(>|t|)'
 head(results1)
 mt_list = split(results1, f = results1$Contrast)
 
 
 
-
+names(mt_list)
 gene <- mt_list[[1]]
 head(gene)
 top_g <- c()
@@ -112,7 +113,7 @@ for(cond in c("Full ROI")) {
   ind <- gene$Subset == cond
   top_g <- c(top_g,
              gene[ind, 'SYMBOL'][
-               order(gene[ind, 'invert_P'], decreasing = TRUE)[1:30]],
+               order(gene[ind, 'invert_P'], decreasing = TRUE)[1:100]],
              gene[ind, 'SYMBOL'][
                order(gene[ind, 'invert_P'], decreasing = FALSE)[1:30]])
 }
@@ -131,20 +132,20 @@ pVP <- ggplot(gene,                                                             
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
   geom_point() +
-  labs(x = "Bystander <- log2(FC) -> Normal Acini ",                                       ###CHANGE
+  labs(x = " <- log2(FC) -> ",                                       ###CHANGE
        y = "Significance, -log10(P)",
        color = "Significance") +
   scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue", `FDR < 0.05` = "lightblue",
                                 `P < 0.05` = "orange2",`NS or FC < 0.5` = "gray"),
                      guide = guide_legend(override.aes = list(size = 4))) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
-  geom_text_repel(data = subset(gene, SYMBOL %in% top_g & FDR < 0.05),
+  geom_text_repel(data = subset(gene, SYMBOL %in% top_g),# & FDR < 0.05),
                   size = 4, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2,
                   max.overlaps = 50) +
   theme_bw(base_size = 16) +
   theme(legend.position = "bottom") 
-
+pVP
 
 
 
@@ -254,7 +255,7 @@ head(gene)
 geneList = gene[,5] #which column? 
 head(geneList)
 
-names(geneList) = as.character(gene[,11])
+names(geneList) = as.character(gene[,10])
 head(geneList)
 geneList = sort(geneList, decreasing = T)
 head(geneList)

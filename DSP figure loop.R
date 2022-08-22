@@ -26,9 +26,9 @@ library(msigdbr)
 datadir <-"C:/Users/edmondsonef/Desktop/DSP GeoMX/Results/"
 setwd(datadir)
 
-#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
 #results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
-results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
 
 universe <- distinct(results, SYMBOL, .keep_all = T)
 m_t2g <- "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/msigdb.v7.5.1.entrez.gmt"
@@ -51,10 +51,10 @@ names(mt_list)
 
 
 ##FOR LOOP
-
-for(i in 28:28){
+i = 28
+for(i in 28:31){
   suffix <- names(mt_list[i])
-  outname <-paste0(suffix, "_class_MHL_no_int")
+  outname <-paste0(suffix, "NEW_comps_MHL_no_int")
   
   gene <- mt_list[[i]]
   gene <- distinct(gene, SYMBOL, .keep_all = T)
@@ -150,8 +150,8 @@ for(i in 28:28){
   ego <- gseGO(geneList      = geneList, 
                 OrgDb        = org.Mm.eg.db,
                 ont          = "BP", #"BP", "MF", and "CC"
-                minGSSize    = 50,
-                maxGSSize    = 500,
+                minGSSize    = 20,
+                maxGSSize    = 1000,
                 pvalueCutoff = 0.05,
                 verbose      = FALSE)
   p1 <- goplot(ego)
