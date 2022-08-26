@@ -35,8 +35,32 @@ library(GSVAdata)
 # adjusting for multiple testing at an FDR < 0.05. 554 were significant after 
 # adjusting for multiple testing at an FDR < 0.2.
 
-
-
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
 
 
 
@@ -303,16 +327,17 @@ dev.off()
 
 
 
-
-
-
-compareCluster(results$Contrast, OrgDb = org.Mm.eg.db,
-               fun = "enrichGO", data = "results")
-
-
-
-
-
+results_new <- results1[ which(results1$Contrast== c("4-PanINlo - 6-PDAC", "4-PanINlo - 7-metastasis")),]
+   
+ck <- compareCluster(results_new$Contrast, 
+                     OrgDb = org.Mm.eg.db,
+                     fun = "enrichGO", 
+                     #fun = enrichKEGG
+                     data = "results_new")
+ck <- setReadable(ck, OrgDb = org.Mm.eg.db, keyType="ENTREZID")
+head(ck) 
+dotplot(ck)
+cnetplot(ck)
 
 
 

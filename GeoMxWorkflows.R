@@ -1,18 +1,39 @@
 ###
 ###
 ### TO DO LIST:
-###0. GLMM model to include path grades as continuous variables
-##   > fm2 <- lmer(Reaction ~ Days + (Days || Subject), sleepstudy)
-
-###0. Interaction terms?
+### 1. GLMM model to include path grades as continuous variables
+###   > fm2 <- lmer(Reaction ~ Days + (Days || Subject), sleepstudy)
 ###
-###1. Venn diagram
-###2. Normalization methods comparison:
+### 2. Normalization methods comparison:
 ###   a. Q3 (
 ###       - Des's methods excluded more genes vs "vignettes/GeoMxWorkflows" 
 ###   b. Negative normal
-###3. RNA trajectory analysis
-###4. Clustering highly variable genes
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+#### Next: compareCluster()
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
+#### 8/26/2022
+####
 ###
 ###
 library(knitr)
