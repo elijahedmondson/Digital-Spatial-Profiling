@@ -24,16 +24,18 @@ library(DOSE)
 library(msigdbr)
 
 datadir <-"C:/Users/edmondsonef/Desktop/DSP GeoMX/Results/"
+datadir <-"C:/Users/edmondsonef/Desktop/R-plots/"
 setwd(datadir)
 
-results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
-#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
 #results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
 
 universe <- distinct(results, SYMBOL, .keep_all = T)
 m_t2g <- "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/msigdb.v7.5.1.entrez.gmt"
 
 results.sig <- dplyr::filter(results, abs(results$Estimate) > 0.5)
+results.sig <- dplyr::filter(results.sig, results.sig$FDR < 0.5)
 head(results.sig)
 names(results.sig)[6] <- 'Pr(>|t|)'
 head(results.sig)
@@ -43,23 +45,22 @@ names(mt_list)
 
 #gmt <- "https://wikipathways-data.wmcloud.org/current/gmt/wikipathways-20220510-gmt-Mus_musculus.gmt"
 #wp <- read.gmt.wp(gmt)
-
-
 #options(warn = 0)
 
 names(mt_list)
 
 
 ##FOR LOOP
-i = 28
+i = 23
 for(i in 28:31){
   suffix <- names(mt_list[i])
-  outname <-paste0(suffix, "NEW_comps_MHL_no_int")
+  outname <-paste0(suffix, "_NEW_comps_MHL_no_int")
   
   gene <- mt_list[[i]]
   gene <- distinct(gene, SYMBOL, .keep_all = T)
 
   top <- dplyr::filter(gene, gene$FDR < 0.05)
+  #top <- dplyr::filter(gene, gene$FDR < 0.001)
   count = count(top)
   print(paste(suffix, ":",count, "genes with FDR < 0.05."))
   
@@ -102,9 +103,9 @@ for(i in 28:31){
     theme_bw(base_size = 16) +
     theme(legend.position = "bottom") 
   
-  volcano <- paste0(datadir, "_", outname, "_volcano.png")
-  ggsave(pVP, file=volcano, width = 8, height = 8, units = "in", bg = "white")
-  rm(volcano)
+  # volcano <- paste0(datadir, "_", outname, "_volcano.png")
+  # ggsave(pVP, file=volcano, width = 8, height = 8, units = "in", bg = "white")
+  # rm(volcano)
 
   ego <- enrichGO(gene          = gene$ENTREZID,
                   keyType       = "ENTREZID",
@@ -112,7 +113,7 @@ for(i in 28:31){
                   OrgDb         = org.Mm.eg.db,
                   ont           = "BP", #"BP", "MF", and "CC"
                   pAdjustMethod = "BH",
-                  pvalueCutoff  = 0.01,
+                  pvalueCutoff  = 0.001,
                   qvalueCutoff  = 0.05,
                   readable      = TRUE)
   
@@ -131,14 +132,44 @@ for(i in 28:31){
   gg_all = plot_grid(first_col, second_col, labels=c('', ''), ncol=2)
   
   multiplot <- paste0(datadir, "_", outname, "_volcano_enrighGO_BP.png")
-  # tiff(multiplot, units="in", width=15, height=10, res=175)
-  # gg_all
-  # dev.off()
-  
   ggsave(gg_all, file=multiplot, width = 15, height = 10, units = "in")
+  rm(multiplot, first_col, second_col, gg_all, pDP, wcdf, pVP, pWC)
   
   
-  rm(multiplot, first_col, second_col, gg_all, pDP, wcdf, ego, pVP, pWC)
+  
+  upsetplot(ego, n = 29:30)
+  
+  #Create geneList
+  head(gene)
+  gene <- distinct(gene, SYMBOL, .keep_all = T)
+  geneList = gene$Estimate1 
+  names(geneList) = as.character(gene$ENTREZID)
+  geneList = sort(geneList, decreasing = T)
+  
+  
+  #GENE CONCEPT NETWORK
+  
+  new.ego <- dplyr::filter(ego, ego@result$Description == c("synapse organization"))#, "axonogenesis"))#, "regulation of neurogenesis"))
+  
+  edox <- setReadable(ego, 'org.Mm.eg.db', 'ENTREZID')
+  p1 <- cnetplot(edox, foldChange=geneList)
+  p2 <- cnetplot(edox, categorySize="pvalue", foldChange=geneList)
+  p3 <- cnetplot(edox, foldChange=geneList, circular = TRUE, colorEdge = TRUE) 
+  gg_all <- cowplot::plot_grid(p1, p2, p3, ncol=3, labels=LETTERS[1:3], rel_widths=c(.8, .8, 1.2))
+  
+  multiplot <- paste0(datadir, "_", outname, "_gseGO_BP.png")
+  ggsave(gg_all, file=multiplot, width = 30, height = 10, units = "in", bg = "white")
+  
+  
+  
+ 
+  plot <- cnetplot(edox, node_label="all", categorySize="pvalue", foldChange=geneList) 
+  file.plot <- paste0(datadir, "NEW_", outname, "_gseGO_BP.png")
+  ggsave(plot, file=file.plot, width = 10, height = 10, units = "in", bg = "white")
+  rm(ego, edox,gg_all, p1, p2, p3)
+
+
+  
   
   #####gseGO()
   head(gene)
@@ -147,21 +178,21 @@ for(i in 28:31){
   names(geneList) = as.character(gene$ENTREZID)
   geneList = sort(geneList, decreasing = T)
   
-  ego <- gseGO(geneList      = geneList, 
+  ego2 <- gseGO(geneList      = geneList, 
                 OrgDb        = org.Mm.eg.db,
                 ont          = "BP", #"BP", "MF", and "CC"
                 minGSSize    = 20,
                 maxGSSize    = 1000,
                 pvalueCutoff = 0.05,
                 verbose      = FALSE)
-  p1 <- goplot(ego)
-  p2 <- dotplot(ego)
-  p3 <- upsetplot(ego, 10)
+  p1 <- goplot(ego2)
+  p2 <- dotplot(ego2)
+  p3 <- upsetplot(ego2, 10)
   gg_all <- cowplot::plot_grid(p1, p2, p3, ncol=1, labels=LETTERS[1:3])
   
   multiplot <- paste0(datadir, "_", outname, "_gseGO_BP.png")
-  ggsave(gg_all, file=multiplot, width = 15, height = 15, units = "in", bg = "white")
-  rm(ego,gg_all, p1, p2, p3)
+  ggsave(gg_all, file=multiplot, width = 15, height = 10, units = "in", bg = "white")
+  rm(ego2,gg_all, p1, p2, p3)
 
   ######## WikiPathways
 # 
@@ -194,52 +225,52 @@ for(i in 28:31){
   # C5: GO gene sets            --good
   # C6: oncogenic signatures    --good
   # C7: immunologic signatures  --good
-  msig_list <- c("C2", "C6", "C7", "H", "C5", "C3")
-  
-  for(j in 1:6){
-    Msig <- msig_list[j]
-    m_t2g <- msigdbr(species = "Mus musculus", category = Msig) %>% 
-      dplyr::select(gs_name, entrez_gene)
-    
-    edo <- enricher(gene$ENTREZID, TERM2GENE=m_t2g)
-    edo2 <- GSEA(geneList, TERM2GENE = m_t2g, eps=0)
-    
-    p1 <- dotplot(edo, showCategory=30) + ggtitle("dotplot for ORA")
-    p2 <- dotplot(edo2, showCategory=30) + ggtitle("dotplot for GSEA")
-    gg_all <- cowplot::plot_grid(p1, p2, ncol=2, labels=LETTERS[1:2])
-    
-    multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_ORA_GSEA.png")
-    ggsave(gg_all, file=multiplot, width = 15, height = 10, units = "in", bg = "white")
-    rm(multiplot, gg_all, p1, p2)
-    
-    ## convert gene ID to Symbol
-    edox <- setReadable(edo2, 'org.Mm.eg.db', 'ENTREZID')
-    p1 <- cnetplot(edox, categorySize="pvalue", node_label="category", foldChange=geneList)
-    p2 <- cnetplot(edox, categorySize="pvalue", node_label="gene", foldChange=geneList)
-    p3 <- cnetplot(edox, foldChange=geneList, node_label="gene", circular = TRUE, colorEdge = TRUE) 
-    gg_all <- cowplot::plot_grid(p1, p2, p3, ncol=3, labels=LETTERS[1:3], rel_widths=c(.8, .8, 1.2))
-      
-    multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_cnetplot.png")
-    ggsave(gg_all, file=multiplot, width = 30, height = 10, units = "in", bg = "white")
-    rm(p1, p2, p3, gg_all, multiplot)
-    
-    multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_heatplot.png")
-    heat <- heatplot(edox, foldChange=geneList, showCategory=5)
-    ggsave(heat, file=multiplot, width = 20, height = 5, units = "in", bg = "white")
-    rm(multiplot, heat)
-    
-    edox2 <- pairwise_termsim(edox)
-    
-    multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_treeplot.png")
-  
-    tree <- treeplot(edox2, hclust_method = "average")
-    ggsave(tree, file=multiplot, width = 20, height = 10, units = "in", bg = "white")
-    rm(multiplot, tree)
-    
-    multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_gseaplot.png")
-
-    plotty <- gseaplot2(edo2, geneSetID = 1:5)
-    ggsave(plotty, file=multiplot, width = 10, height = 5, units = "in", bg = "white")
-    rm(multiplot, plotty, edo, edo2, edox, edox2)}
+  # msig_list <- c("C2", "C6", "C7", "H", "C5", "C3")
+  # 
+  # for(j in 1:6){
+  #   Msig <- msig_list[j]
+  #   m_t2g <- msigdbr(species = "Mus musculus", category = Msig) %>% 
+  #     dplyr::select(gs_name, entrez_gene)
+  #   
+  #   edo <- enricher(gene$ENTREZID, TERM2GENE=m_t2g)
+  #   edo2 <- GSEA(geneList, TERM2GENE = m_t2g, eps=0)
+  #   
+  #   p1 <- dotplot(edo, showCategory=30) + ggtitle("dotplot for ORA")
+  #   p2 <- dotplot(edo2, showCategory=30) + ggtitle("dotplot for GSEA")
+  #   gg_all <- cowplot::plot_grid(p1, p2, ncol=2, labels=LETTERS[1:2])
+  #   
+  #   multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_ORA_GSEA.png")
+  #   ggsave(gg_all, file=multiplot, width = 15, height = 10, units = "in", bg = "white")
+  #   rm(multiplot, gg_all, p1, p2)
+  #   
+  #   ## convert gene ID to Symbol
+  #   edox <- setReadable(edo2, 'org.Mm.eg.db', 'ENTREZID')
+  #   p1 <- cnetplot(edox, categorySize="pvalue", node_label="category", foldChange=geneList)
+  #   p2 <- cnetplot(edox, categorySize="pvalue", node_label="gene", foldChange=geneList)
+  #   p3 <- cnetplot(edox, foldChange=geneList, node_label="gene", circular = TRUE, colorEdge = TRUE) 
+  #   gg_all <- cowplot::plot_grid(p1, p2, p3, ncol=3, labels=LETTERS[1:3], rel_widths=c(.8, .8, 1.2))
+  #     
+  #   multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_cnetplot.png")
+  #   ggsave(gg_all, file=multiplot, width = 30, height = 10, units = "in", bg = "white")
+  #   rm(p1, p2, p3, gg_all, multiplot)
+  #   
+  #   multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_heatplot.png")
+  #   heat <- heatplot(edox, foldChange=geneList, showCategory=5)
+  #   ggsave(heat, file=multiplot, width = 20, height = 5, units = "in", bg = "white")
+  #   rm(multiplot, heat)
+  #   
+  #   edox2 <- pairwise_termsim(edox)
+  #   
+  #   multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_treeplot.png")
+  # 
+  #   tree <- treeplot(edox2, hclust_method = "average")
+  #   ggsave(tree, file=multiplot, width = 20, height = 10, units = "in", bg = "white")
+  #   rm(multiplot, tree)
+  #   
+  #   multiplot <- paste0(datadir, "_", outname, "_", Msig, "_GSEA_gseaplot.png")
+  # 
+  #   plotty <- gseaplot2(edo2, geneSetID = 1:5)
+  #   ggsave(plotty, file=multiplot, width = 10, height = 5, units = "in", bg = "white")
+  #   rm(multiplot, plotty, edo, edo2, edox, edox2)}
 }
   

@@ -18,6 +18,28 @@ library(GeoMxWorkflows)
 library(NanoStringNCTools)
 library(GeomxTools)
 library(readxl)
+
+
+##NEW##
+
+library(GSVA)
+library(GSEABase)
+library(GSVAdata)
+#https://www.bioconductor.org/packages/release/bioc/vignettes/GSVA/inst/doc/GSVA.html
+
+
+#Analyst notes: We scored 810 gene sets. We calculate scores for any gene set 
+# with at least 5 genes and fewer than 500 genes.
+# 
+# Analyst Notes: Of the gene sets scored, 390 gene sets were significant after 
+# adjusting for multiple testing at an FDR < 0.05. 554 were significant after 
+# adjusting for multiple testing at an FDR < 0.2.
+
+
+
+
+
+
 #####
 #####CALCULATE DE
 #####CALCULATE DE
@@ -94,19 +116,19 @@ head(results)
 #write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/07.08.22_class_MHL_no_int.csv")
 
 #results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
-#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
 #results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
 
 results1 <- dplyr::filter(results, abs(results$Estimate) > 0.5)
 head(results1)
-#names(results1)[6] <- 'Pr(>|t|)'
+names(results1)[6] <- 'Pr(>|t|)'
 head(results1)
 mt_list = split(results1, f = results1$Contrast)
 
 
 
 names(mt_list)
-gene <- mt_list[[1]]
+gene <- mt_list[[23]]
 head(gene)
 top_g <- c()
 for(cond in c("Full ROI")) {
@@ -147,7 +169,8 @@ pVP <- ggplot(gene,                                                             
   theme(legend.position = "bottom") 
 pVP
 
-
+head(gene)
+gene.neg <- dplyr::filter(gene, gene$Estimate < 0.5)
 
 
 #####
@@ -205,7 +228,7 @@ head(universe)
 head(gene)
 
 #####enrichGO
-ego <- enrichGO(gene          = gene$ENTREZID,
+ego <- enrichGO(gene          = gene.neg$ENTREZID,
                 keyType       = "ENTREZID",
                 universe      = universe$ENTREZID, ##list of all genes?? 
                 OrgDb         = org.Mm.eg.db,

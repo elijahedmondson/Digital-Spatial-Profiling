@@ -15,7 +15,30 @@
 ###4. Clustering highly variable genes
 ###
 ###
-
+library(knitr)
+library(dplyr)
+library(ggforce)
+library(GeoMxWorkflows)
+library(NanoStringNCTools)
+library(GeomxTools)
+library(readxl)
+library(enrichplot)
+library(data.table)
+library(fgsea)
+library(ggplot2)
+library(ggrepel) 
+library(org.Hs.eg.db)
+library(org.Mm.eg.db)
+library(AnnotationHub)
+library(GOSemSim)
+library(clusterProfiler)
+library(GOSemSim)
+library(ggwordcloud)
+library(ggplot2)
+library(cowplot)
+library(ReactomePA)
+library(DOSE)
+library(msigdbr)
 library(knitr)
 library(dplyr)
 library(ggforce)
@@ -644,7 +667,7 @@ load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
 
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$comps)#, c("4-PanINlo","5-PanINhi"))                           ###CHANGE
+  factor(pData(target_myData)$dx3.KPC, c("Normal acini","PanIN","Carcinoma","Metastasis"))                           ###CHANGE
 pData(target_myData)[["slide"]] <-                                            ### Control for 
   factor(pData(target_myData)[["MHL Number"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
@@ -692,6 +715,48 @@ goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam","Cre",
          "Onecut1","Onecut2","Onecut3","Cdkn1a","Prss2","Runx1","Gata6",
          "Gata6", "S100a11", "Nr5a2","Agr2", "Foxa2", "Fosl1","Ets2", "Runx3")
 
+
+Axonogenesis <- c("Cckar","Slit3","Etv1","Sema7a","Cxcr4","Kif5c","Ptprm",
+"Ptprs","Bsg","Smad4","Bcl2","Trak1","Ptch1","
+Islr2","Taok2","Cdkl3","Actb","Ednra","Pip5k1c",
+"Sptbn4","Lama5","Ablim1","Rtn4","Wnt7b","Spg11","
+Golga4","Dock7","Ephb2","Cacna1a","Ptpn11","B4gat1",
+"Smo","B4galt6","Rab3a","Ntrk3","Neo1","Lrp1",
+"Atp5g1","Kif5b","Brsk2","Erbb2","Map1a","Flrt2",
+"Tsku","Map1s","Chrnb2","Fstl4","Lrp4","Dag1","Sin3a",
+"Mapk8ip3","Dclk1","Adnp","Celsr3","Rpl4","Tubb2b",
+"Efna5","Plxnb2","Ngf","Ache","Vim","Flrt3","Fgfr2","
+Ephb4","Flot1","Sema4c","Gsk3b","Sema3d","Aatk","Cdh4",
+"Tubb3","Agrn","Evl","Brsk1","Notch3","Fzd3",
+"Hsp90aa1","Nrn1","Bcl11a","Sema4g","Lama3","Epha8",
+"Ntn5","Amigo1","Apbb1","Mgll","Ret","Atp8a2","
+Alcam","Unc5a","Grin1","Cntn6","Wnt7a","Pou4f3","Shh")
+
+Synapse_Organization <- c("Abl2", "Ache", "Actb", "Actr3", "Adam10", "Adgrb2", 
+                          "Adgre5", "Adgrf1", "Adgrl3", "Adnp", "Arf1", "Arf4", "Arf6", "Arhgap44", 
+                          "Baiap2", "Bhlhb9", "C1qa", "C1ql1", "C3", "Cacna1a", "Cacna1s", "Cacnb1", 
+                          "Cacnb4", "Camk1", "Camk2b", "Caprin1", "Cel", "Cfl1", "Chchd10", "Chd4", 
+                          "Chrnb1", "Clstn1", "Cnksr2", "Cntnap4", "Col4a1", "Col4a5", "Ctnnb1", 
+                          "Cttn", "Cttnbp2", "Cyfip1", "Dact1", "Dag1", "Dbn1", "Dctn1", "Dlgap3",
+                          "Dock10", "Drd1", "Efna1", "Efnb2", "Eif4g1", "Epha4", "Ephb2", "Erbb4", 
+                          "F2r", "Farp1", "Fgfr2", "Flna", "Flrt3", "Fzd5", "Gabrb3", "Ghrl", "Gnpat",
+                          "Gphn", "Grm5", "Hnrnpk", "Hspa8", "Igsf9", "Insr", "Itga3", "Itpka", "Klk8",
+                          "Lamb2", "Lgi2", "Lrfn2", "Lrfn5", "Lrrc4c", "Lrrk2", "Lrrtm2", "Lzts3",
+                          "Magi2", "Marcks", "Mdga1", "Mdga2", "Mef2c", "Mfn2", "Myh10", "Ndrg1", 
+                          "Nedd4", "Nfasc", "Nfatc4", "Nfia", "Nlgn1", "Nlgn3", "Nrcam", "Nrg1", 
+                          "Nrg2", "Nrp1", "Nrxn1", "Nrxn3", "Ntn1", "Ntrk2", "Numb", "Obsl1", "Ophn1",
+                          "Pak3", "Palm", "Pcdh17", "Pcdhgc4", "Pclo", "Pdlim5", "Pdzrn3", "Pfn1", 
+                          "Pfn2", "Picalm", "Pik3r1", "Pin1", "Pmp22", "Ppfia2", "Ppfia4", "Prkca", 
+                          "Prrt1", "Psen1", "Ptn", "Ptprf", "Ptprt", "Rab17", "Rab29", "Rab39b", 
+                          "Rapsn", "Rhoa", "Rims4", "Rock2", "Sdf4", "Sdk1", "Septin7", "Setd5", 
+                          "Sez6", "Sez6l", "Shank1", "Shank2", "Shank3", "Sipa1l1", "Six4", "Slitrk6", 
+                          "Snta1", "Sorbs1", "Sparc", "Srcin1", "Srgn", "Ssh1", "St8sia2", "Syngap1",
+                          "Tanc2", "Taok2", "Tnc", "Tubb5", "Vcp", "Vps35", "Wnt5a", "Wnt7b", "Ywhaz",
+                          "Zmynd8", "Lgmn", "Tuba1b")
+
+select_neural <- c("Actb","Tuba1b","Rock2")
+
+
 # goi.acini <- c("Ctrb1","Cpa1","Gata6","Bhlha15","Nr5a2","Ptf1a")
 # goi.duct <- c("Hnf1b","Sox9","Krt19","Gata6","Onecut1")
 # goi.ADM <- c("Cpa1","Gata6","Sox9","Onecut1","Ngn3","Nr5a2","Ptf1a","Pdx1")
@@ -702,6 +767,19 @@ goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam","Cre",
 
 #library(biomaRt)
 
+results.sig <- dplyr::filter(results, abs(results$Estimate) > 0.5)
+results.sig <- dplyr::filter(results.sig, results.sig$`Pr(>|t|)` < 0.5)
+head(results.sig)
+names(results.sig)[6] <- 'Pr(>|t|)'
+head(results.sig)
+
+mt_list = split(results.sig, f = results.sig$Contrast)
+
+names(mt_list)
+
+gene <- mt_list[[5]]
+
+
 
 kable(subset(results, Gene %in% goi & Subset == "Full ROI"), digits = 3,
       caption = "DE results for Genes of Interest",
@@ -711,45 +789,38 @@ kable(subset(results, Gene %in% goi & Subset == "Full ROI"), digits = 3,
 
 library(ggrepel) 
 # Categorize Results based on P-value & FDR for plotting
-results$Color <- "NS or FC < 0.5"
-results$Color[results$`Pr(>|t|)` < 0.05] <- "P < 0.05"
-results$Color[results$FDR < 0.05] <- "FDR < 0.05"
-results$Color[results$FDR < 0.001] <- "FDR < 0.001"
-results$Color[abs(results$Estimate) < 0.5] <- "NS or FC < 0.5"
-results$Color <- factor(results$Color,
+gene$Color <- "NS or FC < 0.5"
+gene$Color[gene$`Pr(>|t|)` < 0.05] <- "P < 0.05"
+gene$Color[gene$FDR < 0.05] <- "FDR < 0.05"
+gene$Color[gene$FDR < 0.001] <- "FDR < 0.001"
+gene$Color[abs(gene$Estimate) < 0.5] <- "NS or FC < 0.5"
+gene$Color <- factor(gene$Color,
                         levels = c("NS or FC < 0.5", "P < 0.05",
                                    "FDR < 0.05", "FDR < 0.001"))
 
 # pick top genes for either side of volcano to label
 # order genes for convenience:
-results$invert_P <- (-log10(results$`Pr(>|t|)`)) * sign(results$Estimate)
+gene$invert_P <- (-log10(gene$`Pr(>|t|)`)) * sign(gene$Estimate)
 top_g <- c()
 for(cond in c("Full ROI")) {
-  ind <- results$Subset == cond
+  ind <- gene$Subset == cond
   top_g <- c(top_g,
-             results[ind, 'Gene'][
-               order(results[ind, 'invert_P'], decreasing = TRUE)[1:30]],
-             results[ind, 'Gene'][
-               order(results[ind, 'invert_P'], decreasing = FALSE)[1:30]])
+             gene[ind, 'Gene'][
+               order(gene[ind, 'invert_P'], decreasing = TRUE)[1:30]],
+             gene[ind, 'Gene'][
+               order(gene[ind, 'invert_P'], decreasing = FALSE)[1:30]])
 }
 top_g <- unique(top_g)
-#results <- results[, -1*ncol(results)] # remove invert_P from matrix
+#gene <- gene[, -1*ncol(gene)] # remove invert_P from matrix
 
-results$Contrast
-
-acini_bystander <- dplyr::filter(results, Contrast == "1 - 2")
-head(acini_bystander)
-# acini_ADM <- dplyr::filter(results, Contrast == "1-Normal acini - 3-ADM")
-# head(acini_ADM)
-# PanINlo_PanINhi <- dplyr::filter(results, Contrast == "4-PanINlo - 5-PanINhi")
-# acini_PanINhi <- dplyr::filter(results, Contrast == "1-Normal acini - 5-PanINhi")
+gene$Contrast
 
 
-
-
+#reverse log fold change to fit with label
+gene$Estimate1 <- gene$Estimate*(-1)
 # Graph results
-ggplot(results,                                                             ###CHANGE
-       aes(x = Estimate, y = -log10(`Pr(>|t|)`),
+ggplot(gene,                                                             ###CHANGE
+       aes(x = Estimate1, y = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
@@ -761,7 +832,7 @@ ggplot(results,                                                             ###C
                                 `P < 0.05` = "orange2",`NS or FC < 0.5` = "gray"),
                      guide = guide_legend(override.aes = list(size = 4))) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
-  geom_text_repel(data = subset(results, Gene %in% top_g & FDR < 0.05),
+  geom_text_repel(data = subset(gene, Gene %in% top_g & FDR < 0.05),
                   size = 4, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2,
                   max.overlaps = 50) +
@@ -769,13 +840,38 @@ ggplot(results,                                                             ###C
   theme(legend.position = "bottom") 
 
 
-#+
-  #facet_wrap(~Subset, scales = "free_y")
 
 
-results1 <- filter(results, FDR < 0.001)
+###WRITE FILE
+head(gene)
+names(gene)[1] <- 'SYMBOL'
+head(gene)
+eg <- bitr(gene$SYMBOL, fromType="SYMBOL", toType=c("ENTREZID"),
+           OrgDb="org.Mm.eg.db")
+head(eg)
+gene <- dplyr::left_join(gene, eg, by = "SYMBOL")
+rm(eg)
+head(results)
+
+
+ego <- enrichGO(gene          = gene$ENTREZID,
+                keyType       = "ENTREZID",
+                universe      = universe$ENTREZID, ##list of all genes?? 
+                OrgDb         = org.Mm.eg.db,
+                ont           = "BP", #"BP", "MF", and "CC"
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.001,
+                qvalueCutoff  = 0.05,
+                readable      = TRUE)
+
+dotplot(ego)
+upsetplot(ego)
+
+
+
+gene1 <- filter(gene, FDR < 0.001)
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-write.csv(results1, file = 'prog4_MHLnumber.csv')
+write.csv(gene1, file = 'prog4_MHLnumber.csv')
 
 
 
@@ -795,21 +891,22 @@ dev.off()
 
 ## ----targetTable, eval = TRUE, as.is = TRUE-----------------------------------
 
-head(results)
-names(results)[2] <- 'Gene'
-head(results)
+head(gene)
+names(gene)[2] <- 'Gene'
+head(gene)
 
-kable(subset(results, Gene %in% c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")), row.names = FALSE)
-kable(subset(results, Gene %in% c("Pdzd8")), row.names = FALSE)
+kable(subset(gene, Gene %in% c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")), 
+      row.names = FALSE)
+kable(subset(gene, Gene %in% c("Pdzd8")), row.names = FALSE)
 ## ----targetExprs, eval = TRUE-------------------------------------------------
 # show expression for a single target: PDHA1
 ggplot(pData(target_myData),
-       aes(x = class, fill = class,
-           y = assayDataElement(target_myData["Agr2", ],
+       aes(x = progression1, fill = progression1,
+           y = assayDataElement(target_myData["Sem1", ],
                                 elt = "q_norm"))) +
   geom_violin() +
   geom_jitter(width = .2) +
-  labs(y = "Agr2 Expression") +
+  labs(y = "Sem1 Expression") +
   scale_y_continuous(trans = "log2") +
   #facet_wrap(~class) +
   theme_bw()
@@ -819,7 +916,7 @@ glom <- pData(target_myData)$progression1# == "Metastasis"
 
 # show expression of PDHA1 vs ITGB1
 ggplot(pData(target_myData),
-       aes(x = assayDataElement(target_myData["Dnajc10", ],
+       aes(x = assayDataElement(target_myData["Tuba1b", ],
                                 elt = "q_norm"),
            y = assayDataElement(target_myData["Mtch2", ],
                                 elt = "q_norm"),
@@ -841,7 +938,7 @@ ggplot(pData(target_myData),
 
 ## ----heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE----
 # select top significant genes based on significance, plot with pheatmap
-GOI <- unique(subset(results, `FDR` < 0.001)$Gene)
+GOI <- unique(subset(gene, `FDR` < 0.001)$Gene)
 pheatmap(log2(assayDataElement(target_myData[GOI, ], elt = "q_norm")),
          scale = "row", 
          show_rownames = FALSE, show_colnames = FALSE,
@@ -855,16 +952,16 @@ pheatmap(log2(assayDataElement(target_myData[GOI, ], elt = "q_norm")),
          annotation_col = pData(target_myData)[, c("progression1", "progression1")])
 
 ## ----maPlot, fig.width = 8, fig.height = 12, fig.wide = TRUE, warning = FALSE, message = FALSE----
-results$MeanExp <-
+gene$MeanExp <-
   rowMeans(assayDataElement(target_myData,
                             elt = "q_norm"))
 
-top_g2 <- results$Gene[results$Gene %in% top_g &
-                         results$FDR < 0.001 &
-                         abs(results$Estimate) > .5 &
-                         results$MeanExp > quantile(results$MeanExp, 0.9)]
+top_g2 <- gene$Gene[gene$Gene %in% top_g &
+                         gene$FDR < 0.001 &
+                         abs(gene$Estimate) > .5 &
+                         gene$MeanExp > quantile(gene$MeanExp, 0.9)]
 
-ggplot(subset(results, !Gene %in% neg_probes),
+ggplot(subset(gene, !Gene %in% neg_probes),
        aes(x = MeanExp, y = Estimate,
            size = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
@@ -878,7 +975,7 @@ ggplot(subset(results, !Gene %in% neg_probes),
                                 `FDR < 0.05` = "lightblue",
                                 `P < 0.05` = "orange2",
                                 `NS or FC < 0.5` = "gray")) +
-  geom_text_repel(data = subset(results, Gene %in% top_g2),
+  geom_text_repel(data = subset(gene, Gene %in% top_g2),
                   size = 4, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2) +
   theme_bw(base_size = 16) +
@@ -894,7 +991,7 @@ ggplot(subset(results, !Gene %in% neg_probes),
 
 
 
-vennCounts(results, include="both")
+vennCounts(gene, include="both")
 
 
 
@@ -906,12 +1003,12 @@ rownames(target_myData)
 exprs(target_myData)[1:15, 1:3]
 
 
-acini_bystander <- dplyr::filter(results, Contrast == "1 - 2")
+acini_bystander <- dplyr::filter(gene, Contrast == "1 - 2")
 head(acini_bystander)
 
 genes <- paste0("gene",1:1000)
 set.seed(20210302)
-gene_list <- list(A = results1(genes,100),
+gene_list <- list(A = gene1(genes,100),
                   B = sample(genes,200),
                   C = sample(genes,300),
                   D = sample(genes,200))
