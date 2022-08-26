@@ -667,7 +667,7 @@ load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
 
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$dx3.KPC, c("Normal acini","PanIN","Carcinoma","Metastasis"))                           ###CHANGE
+  factor(pData(target_myData)$comps, c("4-PanINlo", "5-PanINhi", "6-PDAC"))                           ###CHANGE
 pData(target_myData)[["slide"]] <-                                            ### Control for 
   factor(pData(target_myData)[["MHL Number"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
@@ -683,7 +683,6 @@ for(status in c("Full ROI")) {
                  elt = "log_q",
                  modelFormula = ~ testRegion + (1 + testRegion | slide),        ### modelFormula =  Reaction ~ Days + (Days || Subject), sleepstudy)
                  #modelFormula = ~ testRegion + (1 | slide),
-                 #modelFormula = ~ testRegion + (1 + testRegion | slide),
                  groupVar = "testRegion",
                  nCores = parallel::detectCores(),
                  multiCore = FALSE)
@@ -770,16 +769,16 @@ select_neural <- c("Actb","Tuba1b","Rock2")
 results.sig <- dplyr::filter(results, abs(results$Estimate) > 0.5)
 results.sig <- dplyr::filter(results.sig, results.sig$`Pr(>|t|)` < 0.5)
 head(results.sig)
-names(results.sig)[6] <- 'Pr(>|t|)'
+#names(results.sig)[6] <- 'Pr(>|t|)'
 head(results.sig)
 
 mt_list = split(results.sig, f = results.sig$Contrast)
 
 names(mt_list)
 
-gene <- mt_list[[5]]
+gene <- mt_list[[2]]
 
-
+gene <- results.sig
 
 kable(subset(results, Gene %in% goi & Subset == "Full ROI"), digits = 3,
       caption = "DE results for Genes of Interest",
@@ -811,10 +810,8 @@ for(cond in c("Full ROI")) {
                order(gene[ind, 'invert_P'], decreasing = FALSE)[1:30]])
 }
 top_g <- unique(top_g)
-#gene <- gene[, -1*ncol(gene)] # remove invert_P from matrix
 
 gene$Contrast
-
 
 #reverse log fold change to fit with label
 gene$Estimate1 <- gene$Estimate*(-1)
@@ -842,16 +839,24 @@ ggplot(gene,                                                             ###CHAN
 
 
 
-###WRITE FILE
+
+
+
+
+###GO
+names(results)[1] <- 'SYMBOL'
+eg <- bitr(results$SYMBOL, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+           OrgDb="org.Mm.eg.db")
+results <- dplyr::left_join(results, eg, by = "SYMBOL")
+rm(eg)
+universe <- distinct(results, SYMBOL, .keep_all = T)
+
 head(gene)
 names(gene)[1] <- 'SYMBOL'
-head(gene)
 eg <- bitr(gene$SYMBOL, fromType="SYMBOL", toType=c("ENTREZID"),
            OrgDb="org.Mm.eg.db")
-head(eg)
 gene <- dplyr::left_join(gene, eg, by = "SYMBOL")
 rm(eg)
-head(results)
 
 
 ego <- enrichGO(gene          = gene$ENTREZID,
@@ -860,18 +865,77 @@ ego <- enrichGO(gene          = gene$ENTREZID,
                 OrgDb         = org.Mm.eg.db,
                 ont           = "BP", #"BP", "MF", and "CC"
                 pAdjustMethod = "BH",
-                pvalueCutoff  = 0.001,
+                pvalueCutoff  = 0.01,
                 qvalueCutoff  = 0.05,
                 readable      = TRUE)
 
 dotplot(ego)
 upsetplot(ego)
+library(topGO)
+plotGOgraph(ego)
+
+head(ego,10)
+
+
+
+
+
+ggplot(ego[1:20], aes(x=reorder(Description, -pvalue), y=Count, fill=-p.adjust)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_fill_continuous(low="blue", high="red") +
+  labs(x = "", y = "", fill = "p.adjust") +
+  theme(axis.text=element_text(size=11))
+
+str(ego)
+
+## extract a dataframe with results from object of type enrichResult
+egobp.results.df <- ego@result
+head(egobp.results.df)
+
+## create a new column for term size from BgRatio
+egobp.results.df$term.size <- gsub("/(\\d+)", "", egobp.results.df$BgRatio)
+
+## filter for term size to keep only term.size => 3, gene count >= 5 and subset
+egobp.results.df <- egobp.results.df[which(egobp.results.df[,'term.size'] >= 3 & egobp.results.df[,'Count'] >= 5),]
+egobp.results.df <- egobp.results.df[c("ID", "Description", "pvalue", "qvalue", "geneID")]
+
+## format gene list column
+egobp.results.df$geneID <- gsub("/", ",", egobp.results.df$geneID)
+
+## add column for phenotype
+egobp.results.df <- cbind(egobp.results.df, phenotype=1)
+egobp.results.df <- egobp.results.df[, c(1, 2, 3, 4, 6, 5)]
+
+## change column headers
+colnames(egobp.results.df) <- c("Name","Description", "pvalue","qvalue","phenotype", "genes")
+
+egobp.results.filename <-file.path(getwd(),paste("clusterprofiler_cluster_enr_results.txt",sep="_"))
+write.table(egobp.results.df,egobp.results.filename,col.name=TRUE,sep="\t",row.names=FALSE,quote=FALSE)
+
+em_command = paste('enrichmentmap build analysisType="generic" ', 
+                   'pvalue=',"0.05", 'qvalue=',"0.05",
+                   'similaritycutoff=',"0.25",
+                   'coeffecients=',"JACCARD",
+                   'enrichmentsDataset1=',egobp.results.filename ,
+                   sep=" ")
+
+#enrichment map command will return the suid of newly created network.
+em_network_suid <- commandsRun(em_command)
+
+renameNetwork("Cluster1_enrichmentmap_cp", network=as.numeric(em_network_suid))
+
+
+
+
+
+
 
 
 
 gene1 <- filter(gene, FDR < 0.001)
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-write.csv(gene1, file = 'prog4_MHLnumber.csv')
+write.csv(gene1, file = '___MHLnumber.csv')
 
 
 

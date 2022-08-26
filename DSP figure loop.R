@@ -35,7 +35,7 @@ universe <- distinct(results, SYMBOL, .keep_all = T)
 m_t2g <- "C:/Users/edmondsonef/Desktop/DSP GeoMx/data/WTA_04122022/raw_data/msigdb.v7.5.1.entrez.gmt"
 
 results.sig <- dplyr::filter(results, abs(results$Estimate) > 0.5)
-results.sig <- dplyr::filter(results.sig, results.sig$FDR < 0.5)
+#results.sig <- dplyr::filter(results.sig, results.sig$FDR < 0.5)
 head(results.sig)
 names(results.sig)[6] <- 'Pr(>|t|)'
 head(results.sig)
@@ -54,7 +54,7 @@ names(mt_list)
 i = 23
 for(i in 28:31){
   suffix <- names(mt_list[i])
-  outname <-paste0(suffix, "_NEW_comps_MHL_no_int")
+  outname <-paste0(suffix, "_NEW_comps_MHL_with_int")
   
   gene <- mt_list[[i]]
   gene <- distinct(gene, SYMBOL, .keep_all = T)

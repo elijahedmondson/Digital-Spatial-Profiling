@@ -10,7 +10,7 @@ library(GOSemSim)
 library(clusterProfiler)
 library(GOSemSim)
 library(ggwordcloud)
-
+library(topGO)
 library(knitr)
 library(dplyr)
 library(ggforce)
@@ -102,18 +102,20 @@ results$Color <- factor(results$Color,
 results$invert_P <- (-log10(results$`Pr(>|t|)`)) * sign(results$Estimate)
 
 ###WRITE FILE
-head(results)
 names(results)[1] <- 'SYMBOL'
-head(results)
 eg <- bitr(results$SYMBOL, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
            OrgDb="org.Mm.eg.db")
-head(eg)
 results <- dplyr::left_join(results, eg, by = "SYMBOL")
 rm(eg)
-head(results)
+
+universe <- distinct(results, SYMBOL, .keep_all = T)
 
 ##Change FILENAME
 #write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/07.08.22_class_MHL_no_int.csv")
+
+######Load results
+######
+
 
 #results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
 results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
@@ -228,7 +230,7 @@ head(universe)
 head(gene)
 
 #####enrichGO
-ego <- enrichGO(gene          = gene.neg$ENTREZID,
+ego <- enrichGO(gene          = gene$ENTREZID,
                 keyType       = "ENTREZID",
                 universe      = universe$ENTREZID, ##list of all genes?? 
                 OrgDb         = org.Mm.eg.db,
@@ -239,12 +241,41 @@ ego <- enrichGO(gene          = gene.neg$ENTREZID,
                 readable      = TRUE)
 #head(ego)
 
-goplot(ego)
+#goplot(ego)
 pUpS <- upsetplot(ego, 10)
 pUpS
 pDP <- dotplot(ego)
 pDP
 
+plotGOgraph(ego)
+
+ggplot(ego[1:20], aes(x=reorder(Description, -pvalue), y=Count, fill=-p.adjust)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_fill_continuous(low="blue", high="red") +
+  labs(x = "", y = "", fill = "p.adjust") +
+  theme(axis.text=element_text(size=11))
+
+str(ego)
+
+
+## extract a dataframe with results from object of type enrichResult
+egobp.results.df <- ego@result
+head(egobp.results.df)
+## create a new column for term size from BgRatio
+egobp.results.df$term.size <- gsub("/(\\d+)", "", egobp.results.df$BgRatio)
+## filter for term size to keep only term.size => 3, gene count >= 5 and subset
+egobp.results.df <- egobp.results.df[which(egobp.results.df[,'term.size'] >= 3 & egobp.results.df[,'Count'] >= 101),]
+egobp.results.df <- egobp.results.df[c("ID", "Description", "pvalue", "qvalue", "geneID")]
+## format gene list column
+egobp.results.df$geneID <- gsub("/", ",", egobp.results.df$geneID)
+## add column for phenotype
+egobp.results.df <- cbind(egobp.results.df, phenotype=1)
+egobp.results.df <- egobp.results.df[, c(1, 2, 3, 4, 6, 5)]
+## change column headers
+colnames(egobp.results.df) <- c("Name","Description", "pvalue","qvalue","phenotype", "genes")
+
+egobp.results.df$Description[11]
 
 wcdf<-read.table(text=ego$GeneRatio, sep = "/")[1]
 wcdf$term<-ego[,2]
@@ -266,9 +297,26 @@ second_col <- plot_grid(pDP, pWC, ncol=1, labels = c('B','C'))
 gg_all = plot_grid(first_col, second_col, labels=c('', ''), ncol=2)
 
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-tiff("Bystander_Acini.tiff", units="in", width=15, height=10, res=200)
+tiff("__.tiff", units="in", width=15, height=10, res=200)
 gg_all
 dev.off()
+
+
+
+
+
+
+compareCluster(results$Contrast, OrgDb = org.Mm.eg.db,
+               fun = "enrichGO", data = "results")
+
+
+
+
+
+
+
+
+
 
 #####gseGO()
 head(gene)
