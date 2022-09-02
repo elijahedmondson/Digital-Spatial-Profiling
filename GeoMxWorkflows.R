@@ -974,6 +974,21 @@ dev.off()
 
 
 
+
+
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
+results1 <- dplyr::filter(results, abs(results$Estimate) > 0.5)
+head(results1)
+names(results1)[6] <- 'Pr(>|t|)'
+head(results1)
+mt_list = split(results1, f = results1$Contrast)
+names(mt_list)
+gene <- mt_list[[23]]
+head(gene)
+
+
 ## ----targetTable, eval = TRUE, as.is = TRUE-----------------------------------
 
 head(gene)
@@ -983,18 +998,30 @@ head(gene)
 kable(subset(gene, Gene %in% c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")), 
       row.names = FALSE)
 kable(subset(gene, Gene %in% c("Pdzd8")), row.names = FALSE)
+
+
 ## ----targetExprs, eval = TRUE-------------------------------------------------
 # show expression for a single target: PDHA1
 ggplot(pData(target_myData),
        aes(x = progression1, fill = progression1,
-           y = assayDataElement(target_myData["Sem1", ],
+           y = assayDataElement(target_myData["Nfib", ],
                                 elt = "q_norm"))) +
   geom_violin() +
   geom_jitter(width = .2) +
-  labs(y = "Sem1 Expression") +
+  labs(y = "Nfib") +
   scale_y_continuous(trans = "log2") +
   #facet_wrap(~class) +
-  theme_bw()
+  theme_bw()+
+  theme(legend.position = "none")+
+  theme(axis.title.x=element_blank(), text = element_text(size = 18))
+
+
+
+
+
+
+
+
 
 ## ----targetExprs2, fig.width = 8, fig.wide = TRUE, eval = TRUE----------------
 glom <- pData(target_myData)$progression1# == "Metastasis"
@@ -1065,40 +1092,6 @@ ggplot(subset(gene, !Gene %in% neg_probes),
                   min.segment.length = .1, box.padding = .2, lwd = 2) +
   theme_bw(base_size = 16) +
   facet_wrap(~Subset, nrow = 2, ncol = 1)
-
-
-
-
-
-
-
-
-
-
-
-vennCounts(gene, include="both")
-
-
-
-library(ggVennDiagram)
-
-dim(target_myData)
-rownames(target_myData)
-
-exprs(target_myData)[1:15, 1:3]
-
-
-acini_bystander <- dplyr::filter(gene, Contrast == "1 - 2")
-head(acini_bystander)
-
-genes <- paste0("gene",1:1000)
-set.seed(20210302)
-gene_list <- list(A = gene1(genes,100),
-                  B = sample(genes,200),
-                  C = sample(genes,300),
-                  D = sample(genes,200))
-
-ggVennDiagram(acini_bystander,category.names = c("Stage 1","Stage 2","Stage 3", "Stage4"), label = "none")
 
 
 

@@ -59,17 +59,49 @@ features <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Cre",
 # goi.met <- c(c)
 # features <- c("Cpa1","Gata6","Sox9","Onecut1","Ngn3","Nr5a2","Ptf1a","Pdx1")
 
-
-features <- c("Ctrb1","Cpa1","Bhlha15","Nr5a2","Ptf1a",
-              "Dclk1","S100a11","Agr2", "Foxa2","Runx3",
-              "Cpa1","Muc5ac","Epcam","Cav1","Fosl1",
-              "Cd274", "Cd8a", "Cd68","Cdk6","Msh3",
+#Metastases 1
+features <- c("Cybrd1","Nr1d1","Bsg","Tmprss4","Tm9sf3",
+              "Mmp23","Rhof","Sftpd", "Aqp5","Ccna1",
+              "Muc3","Muc5ac","Muc3a","Kif12","Calml4",
+              "Dbp", "Mrtfb", "Rplp0","Dnajc10","Rps12",
               "Pdzd8", "Mtch2", "Msln", "Prom1", "Vars2")
+#Metastases 2
+features <- c("Porcn","Rpl6","Ybx1","Wfdc2","Tpi1",
+              "Golim4","Otop3","F3", "Id2","Adamtsl5",
+              "Bag1","Rnf186","Glis2","Slc35f5","Tspan12",
+              "Slc9a4", "Ephb2", "Tmem45b","Tmprss2","Pdxdc1",
+              "Lgals2", "Esrp1", "Tmem54", "Ptprf", "Ccnd2",
+              "Ern2","Sult1c2")
+#Metastases 3 / CNS
+features <- c("Gltp","Spock3","Sgms2","Rasgrf1","St8sia3",
+              "Rap1gap","Rbms3","Ccdc92","Ncald","Ppp1r1b",
+              "Gabbr2","Nt5c2","Cdkn2a","Atrnl1","Camk2n1",
+              "Setbp1","Dennd4c","Hs3st1","Shf")
 
-RidgePlot(mySeurat, features = features, ncol = 5)
+#Brain/synaptogenesis/neuronal
+features <- c("Nfib", "Tuba1b", "Net1", "Ncald","Spock3",
+              "Rock2", "Sem1", "Ctnnd1","Adgre5", "Dennd4c",
+              "Smad4", "Flna", "Cntn1", "Cntn6","Sgms2",
+              "Nrxn1","Nrxn2","Nrxn3","Lamb2","Rasgrf1",
+              "Sema3d", "Sema4b","Sema4g","Sema5a","St8sia3",
+              "Lama5", "Rtn4", "Picalm","Efnb2", "Rbms3")
 
+list <- "Lamp1"
+list <- c("Ncald", "St8sia3", "Camk2n1", "Atrnl1", "Spock3", "Rasgrf1")
 
 levels(mySeurat)
+levels(x = mySeurat) <- c("1-Normal acini", "2-Bystander", 
+                          "3-ADM", "4-PanINlo", "5-PanINhi", 
+                          "6-PDAC", "7-metastasis", "Stroma", "Islet")
+fig <- RidgePlot(mySeurat, sort = F, 
+          idents = c("1-Normal acini", "2-Bystander", "3-ADM", 
+                     "4-PanINlo", "5-PanINhi", "6-PDAC", "7-metastasis"), 
+          features = list, ncol = 2)
+
+setwd("C:/Users/edmondsonef/Desktop/R-plots/")
+tiff("fig2.tiff", units="in", width=8, height=8, res=300)
+fig
+dev.off()
 
 # Find differentially expressed features between CD14+ and FCGR3A+ Monocytes
 
