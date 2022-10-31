@@ -1030,22 +1030,24 @@ glom <- pData(target_myData)$progression1# == "Metastasis"
 ggplot(pData(target_myData),
        aes(x = assayDataElement(target_myData["Tuba1b", ],
                                 elt = "q_norm"),
-           y = assayDataElement(target_myData["Mtch2", ],
+           y = assayDataElement(target_myData["Rock2", ],
                                 elt = "q_norm"),
-           color = progression1)) +
-  geom_vline(xintercept =
-               max(assayDataElement(target_myData["Dnajc10", glom],
-                                    elt = "q_norm")),
-             lty = "dashed", col = "darkgray") +
-  geom_hline(yintercept =
-               max(assayDataElement(target_myData["Mtch2", glom],
-                                    elt = "q_norm")),
-             lty = "dashed", col = "darkgray") +
+           color = comps, label=dsxf)) +
+  geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
+  # geom_vline(xintercept =
+  #              max(assayDataElement(target_myData["Net1", ],
+  #                                   elt = "q_norm")),
+  #            lty = "dashed", col = "darkgray") +
+  # geom_hline(yintercept =
+  #              max(assayDataElement(target_myData["Rock2", ],
+  #                                   elt = "q_norm")),
+  #            lty = "dashed", col = "darkgray") +
   geom_point(size = 3) +
   theme_bw() +
   scale_x_continuous(trans = "log2") + 
   scale_y_continuous(trans = "log2") +
-  labs(x = "Dnajc10 Expression", y = "Mtch2 Expression") #+
+  labs(x = "Tuba1b Expression", y = "Rock2 Expression") 
+ #+
   #facet_wrap(~class)
 
 ## ----heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE----
