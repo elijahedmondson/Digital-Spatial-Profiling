@@ -990,6 +990,8 @@ head(gene)
 
 
 ## ----targetTable, eval = TRUE, as.is = TRUE-----------------------------------
+load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
+
 
 head(gene)
 names(gene)[2] <- 'Gene'
@@ -1008,7 +1010,7 @@ ggplot(pData(target_myData),
                                 elt = "q_norm"))) +
   geom_violin() +
   geom_jitter(width = .2) +
-  labs(y = "Nfib") +
+  labs(y = "") +
   scale_y_continuous(trans = "log2") +
   #facet_wrap(~class) +
   theme_bw()+
@@ -1028,9 +1030,9 @@ glom <- pData(target_myData)$progression1# == "Metastasis"
 
 # show expression of PDHA1 vs ITGB1
 ggplot(pData(target_myData),
-       aes(x = assayDataElement(target_myData["Tuba1b", ],
+       aes(x = assayDataElement(target_myData["Trp53", ],
                                 elt = "q_norm"),
-           y = assayDataElement(target_myData["Rock2", ],
+           y = assayDataElement(target_myData["Msln", ],
                                 elt = "q_norm"),
            color = comps, label=dsxf)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
@@ -1046,7 +1048,7 @@ ggplot(pData(target_myData),
   theme_bw() +
   scale_x_continuous(trans = "log2") + 
   scale_y_continuous(trans = "log2") +
-  labs(x = "Tuba1b Expression", y = "Rock2 Expression") 
+  labs(x = "Trp53 Expression", y = "Msln Expression") 
  #+
   #facet_wrap(~class)
 
