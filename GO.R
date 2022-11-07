@@ -246,7 +246,7 @@ head(gene)
 #"MF" = molecular function
 #"CC" = cellular component
 
-results <- distinct(results, SYMBOL, .keep_all = T)
+results <- distinct(results1, SYMBOL, .keep_all = T)
 universe <- bitr(results$SYMBOL, fromType="SYMBOL", 
                  toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
                  OrgDb="org.Mm.eg.db")
@@ -612,13 +612,18 @@ cowplot::plot_grid(p1, p2, p3, p4, ncol=2, labels=LETTERS[1:4])
 # geneCluster parameter.
 
 #gcSample =  list of different samples
-results2 <- dplyr::select(results1, Estimate, Contrast, ENTREZID)
+results2 <- dplyr::select(results, Estimate, Contrast, ENTREZID)
 results2 <- dplyr::filter(results2, Contrast == c("1-Normal acini - 3-ADM",
                                                  "3-ADM - 4-PanINlo",
                                                  "4-PanINlo - 5-PanINhi",
                                                  "5-PanINhi - 6-PDAC",
                                                  "4-PanINlo - 6-PDAC",
                                                  "5-PanINhi - 7-metastasis"))
+results2 <- dplyr::filter(results2, Contrast == c("1-Normal acini - 3-ADM",
+                                                  "1-Normal acini - 4-PanINlo",
+                                                  "1-Normal acini - 5-PanINhi",
+                                                  "1-Normal acini - 6-PDAC",
+                                                  "1-Normal acini - 7-metastasis"))
                                                  
 head(results2)
 mt_list = split(results2, f = results2$Contrast)
@@ -631,21 +636,39 @@ mt_list1<-list()
 for(i in 1:length(ids)){
   id <- ids[i]
   df <- dplyr::filter(results2, results2$Contrast == id)
-  mt_list1[[i]]<-  df$ENTREZID
+  mt_list1[[i]]<-  as.character(df$ENTREZID)
   }
-
-
-mt_list1 <- dplyr::select(mt_list, ENTREZID)
+names(mt_list1) <- c(ids) 
 str(mt_list1)
 
 ck <- compareCluster(geneCluster = mt_list1, 
                      fun = enrichGO, #"groupGO", "enrichGO", "enrichKEGG", "enrichDO" or "enrichPathway"
                      OrgDb = org.Mm.eg.db)
 ck <- setReadable(ck, OrgDb = org.Mm.eg.db, keyType="ENTREZID")
-head(ck) 
 
-
+head(ck)
 dotplot(ck)
+formula_res <- setReadable(ck, 'org.Mm.eg.db', 'ENTREZID')
+cnetplot(ck, node_label="category", 
+         cex_label_category = 1.2) 
+cnetplot(ck, node_label="gene", 
+         cex_label_category = 1.2) 
+cnetplot(ck, node_label="all", 
+         cex_label_category = 1.2) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # As an alternaitve to using named list, the compareCluster() function also 
 # supports passing a formula to describe more complicated experimental designs 
 # (e.g., Gene ~ time + tx).
@@ -674,15 +697,6 @@ formula_res <- compareCluster(ENTREZID~Contrast, data=results2,
                               fun="enrichGO", OrgDb = org.Mm.eg.db, 
                               keyType="ENTREZID")
 
-head(formula_res)
-dotplot(formula_res)
-formula_res <- setReadable(formula_res, 'org.Mm.eg.db', 'ENTREZID')
-cnetplot(formula_res, node_label="category", 
-         cex_label_category = 1.2) 
-cnetplot(formula_res, node_label="gene", 
-         cex_label_category = 1.2) 
-cnetplot(formula_res, node_label="all", 
-         cex_label_category = 1.2) 
 
 
 
@@ -726,3 +740,37 @@ p1 <- cnetplot(edox, foldChange=geneList)
 p2 <- cnetplot(edox, categorySize="pvalue", foldChange=geneList)
 p3 <- cnetplot(edox, foldChange=geneList, circular = TRUE, colorEdge = TRUE) 
 cowplot::plot_grid(p1, p2, p3, ncol=3, labels=LETTERS[1:3], rel_widths=c(.8, .8, 1.2))
+
+
+
+########
+########
+########
+########
+########
+########
+########
+########
+
+
+
+
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
+
+results <- dplyr::filter(results, abs(results$Estimate) > 0.5)
+results <- dplyr::filter(results, FDR < '0.05')
+
+
+
+head(results)
+names(results)[6] <- 'Pr(>|t|)'
+head(results)
+str(results)
+str(mt_list)
+mt_list = split(results, f = results$Contrast)
+
+ck <- compareCluster(geneCluster = gcSample, fun = enrichKEGG)
+ck <- setReadable(ck, OrgDb = org.Hs.eg.db, keyType="ENTREZID")
+head(ck) 

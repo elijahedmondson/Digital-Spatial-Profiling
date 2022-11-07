@@ -22,7 +22,7 @@ head(mySeurat@misc$QCMetrics$QCFlags) # QC metrics
 head(mySeurat@assays$GeoMx@meta.features) # gene metadata
 VlnPlot(mySeurat, features = "nCount_GeoMx", pt.size = 5)
 
-mySeurat <- as.Seurat.NanoStringGeoMxSet(target_myData, normData = "q_norm", ident = "comps")
+mySeurat <- as.Seurat.NanoStringGeoMxSet(target_myData, normData = "q_norm", ident = "class")
 VlnPlot(mySeurat, features = "nCount_GeoMx", pt.size = 5)
 
 
@@ -86,16 +86,13 @@ features <- c("Nfib", "Tuba1b", "Net1", "Ncald","Spock3",
               "Sema3d", "Sema4b","Sema4g","Sema5a","St8sia3",
               "Lama5", "Rtn4", "Picalm","Efnb2", "Rbms3")
 
-list <- "Lamp1"
+list <- "Kras"
 list <- c("Ncald", "St8sia3", "Camk2n1", "Atrnl1", "Spock3", "Rasgrf1")
 
 levels(mySeurat)
-levels(x = mySeurat) <- c("1-Normal acini", "2-Bystander", 
-                          "3-ADM", "4-PanINlo", "5-PanINhi", 
-                          "6-PDAC", "7-metastasis", "Stroma", "Islet")
+levels(x = mySeurat) <- c("Acinar", "PanIN","Carcinoma")
 fig <- RidgePlot(mySeurat, sort = F, 
-          idents = c("1-Normal acini", "2-Bystander", "3-ADM", 
-                     "4-PanINlo", "5-PanINhi", "6-PDAC", "7-metastasis"), 
+          idents = c("Acinar", "PanIN","Carcinoma"), 
           features = list, ncol = 2)
 
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
@@ -106,7 +103,7 @@ dev.off()
 # Find differentially expressed features between CD14+ and FCGR3A+ Monocytes
 
 #NormlizeData() before "FindMarkers()
-de_markers <- FindMarkers(mySeurat, ident.1 = "5-PanINhi", ident.2 = "4-PanINlo", 
+de_markers <- FindMarkers(mySeurat, ident.1 = "4-PanINlo", ident.2 = "6-PDAC", 
                                   test.use = "negbinom")
 
 de_markers <- FindAllMarkers(mySeurat, ident.1 = "5-PanINhi", ident.2 = "4-PanINlo", 

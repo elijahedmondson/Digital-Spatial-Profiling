@@ -58,7 +58,8 @@ for(i in 28:31){
   
   gene <- mt_list[[i]]
   gene <- distinct(gene, SYMBOL, .keep_all = T)
-
+  #gene <- dplyr::filter(gene, gene$FDR < 0.05)
+  
   top <- dplyr::filter(gene, gene$FDR < 0.05)
   #top <- dplyr::filter(gene, gene$FDR < 0.001)
   count = count(top)
@@ -113,7 +114,7 @@ for(i in 28:31){
                   OrgDb         = org.Mm.eg.db,
                   ont           = "BP", #"BP", "MF", and "CC"
                   pAdjustMethod = "BH",
-                  pvalueCutoff  = 0.001,
+                  pvalueCutoff  = 0.0000001,
                   qvalueCutoff  = 0.05,
                   readable      = TRUE)
   
@@ -137,7 +138,7 @@ for(i in 28:31){
   
   
   
-  upsetplot(ego, n = 29:30)
+  upsetplot(ego)
   
   #Create geneList
   head(gene)
@@ -147,9 +148,13 @@ for(i in 28:31){
   geneList = sort(geneList, decreasing = T)
   
   
-  #GENE CONCEPT NETWORK
   
-  new.ego <- dplyr::filter(ego, ego@result$Description == c("synapse organization"))#, "axonogenesis"))#, "regulation of neurogenesis"))
+  
+  ###
+
+  ###
+  
+  
   
   edox <- setReadable(ego, 'org.Mm.eg.db', 'ENTREZID')
   p1 <- cnetplot(edox, foldChange=geneList)

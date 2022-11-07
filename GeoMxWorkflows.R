@@ -67,6 +67,7 @@ library(GeoMxWorkflows)
 library(NanoStringNCTools)
 library(GeomxTools)
 library(readxl)
+library(topGO)
 
 #####
 
@@ -688,7 +689,7 @@ load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
 
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$comps, c("4-PanINlo", "5-PanINhi", "6-PDAC"))                           ###CHANGE
+  factor(pData(target_myData)$progression2)#, c("4-PanINlo", "5-PanINhi", "6-PDAC"))                           ###CHANGE
 pData(target_myData)[["slide"]] <-                                            ### Control for 
   factor(pData(target_myData)[["MHL Number"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
@@ -700,22 +701,16 @@ results <- c()
 for(status in c("Full ROI")) {
   ind <- pData(target_myData)$segment == status
   mixedOutmc <-
-    mixedModelDE(target_myData[, ind],
-                 elt = "log_q",
+    mixedModelDE(target_myData[, ind], elt = "log_q",
                  modelFormula = ~ testRegion + (1 + testRegion | slide),        ### modelFormula =  Reaction ~ Days + (Days || Subject), sleepstudy)
                  #modelFormula = ~ testRegion + (1 | slide),
                  groupVar = "testRegion",
                  nCores = parallel::detectCores(),
                  multiCore = FALSE)
-  
-  # format results as data.frame
   r_test <- do.call(rbind, mixedOutmc["lsmeans", ])
   tests <- rownames(r_test)
   r_test <- as.data.frame(r_test)
   r_test$Contrast <- tests
-  
-  # use lapply in case you have multiple levels of your test factor to
-  # correctly associate gene name with it's row in the results table
   r_test$Gene <- 
     unlist(lapply(colnames(mixedOutmc),
                   rep, nrow(mixedOutmc["lsmeans", ][[1]])))
@@ -726,14 +721,60 @@ for(status in c("Full ROI")) {
   results <- rbind(results, r_test)
 }
 
+write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/11-3-22_MHL_progression2_with_int.csv")
+
+
+#####
+##### GENE NAME LISTS
+#####
+
 goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam","Cre",
          "Krt18", "Notch1", "Notch2", "Notch3", "Notch4","Cldn8",
          "Cdk6","Msh3","Myc","Mastl", "Sox2","Cav1","Fosl1","Gata4",
-         "Cldn18","Capn6","Cpa1","Muc5ac","Tff1","Smad4","Sox9",
+         "Cldn18","Capn6","Cpa1","Muc5ac","Tff1","Smad4",
          "Ptf1a","Pdx1","Nr5a2","Neurog3","Bhlha15","Krt19","Dclk1",
          "Elastase","Hnf1b","Krt19","Ngn3","Ctrb1", "Hes1", "Smad4",
          "Onecut1","Onecut2","Onecut3","Cdkn1a","Prss2","Runx1","Gata6",
-         "Gata6", "S100a11", "Nr5a2","Agr2", "Foxa2", "Fosl1","Ets2", "Runx3")
+         "Gata6", "S100a11", "Nr5a2","Agr2", "Foxa2", "Fosl1","Ets2",
+         "Pdia2", "Krt7", "Krt8", "Cxcl16", "Cdkn2b", "Pnliprp2", "Actb",
+         "Ephb2","Tuba1b", "Gkn3", "Notch3", "Foxq1", "S100a6",
+         "Ctrb1","Cpa1","Gata6","Bhlha15","Nr5a2","Ptf1a",
+         "Cckar","Slit3","Etv1","Sema7a","Cxcr4","Kif5c","Ptprm",
+         "Ptprs","Bsg","Smad4","Bcl2","Trak1","Ptch1","
+Islr2","Taok2","Cdkl3","Actb","Ednra","Pip5k1c",
+         "Sptbn4","Lama5","Ablim1","Rtn4","Wnt7b","Spg11","
+Golga4","Dock7","Ephb2","Cacna1a","Ptpn11","B4gat1",
+         "Smo","B4galt6","Rab3a","Ntrk3","Neo1","Lrp1",
+         "Atp5g1","Kif5b","Brsk2","Erbb2","Map1a","Flrt2",
+         "Map1s","Chrnb2","Fstl4","Lrp4","Dag1","Sin3a",
+         "Mapk8ip3","Dclk1","Adnp","Celsr3","Rpl4","Tubb2b",
+         "Efna5","Plxnb2","Ngf","Ache","Vim","Flrt3","Fgfr2","
+Ephb4","Flot1","Sema4c","Gsk3b","Sema3d","Aatk","Cdh4",
+         "Tubb3","Agrn","Evl","Brsk1","Notch3","Fzd3",
+         "Hsp90aa1","Nrn1","Bcl11a","Sema4g","Lama3","Epha8",
+         "Ntn5","Amigo1","Apbb1","Mgll","Ret","Atp8a2","
+Alcam","Unc5a","Grin1","Cntn6","Wnt7a","Pou4f3","Shh", "Abl2", "Ache", "Actb", "Actr3", "Adam10", "Adgrb2", 
+         "Adgre5", "Adgrf1", "Adgrl3", "Adnp", "Arf1", "Arf4", "Arf6", "Arhgap44", 
+         "Baiap2", "Bhlhb9", "C1qa", "C1ql1", "C3", "Cacna1a", "Cacna1s", "Cacnb1", 
+         "Cacnb4", "Camk1", "Camk2b", "Caprin1", "Cel", "Cfl1", "Chchd10", "Chd4", 
+         "Chrnb1", "Clstn1", "Cnksr2", "Cntnap4", "Col4a1", "Col4a5", "Ctnnb1", 
+         "Cttn", "Cttnbp2", "Cyfip1", "Dact1", "Dag1", "Dbn1", "Dctn1", "Dlgap3",
+         "Dock10", "Drd1", "Efna1", "Efnb2", "Eif4g1", "Epha4", "Ephb2", "Erbb4", 
+         "F2r", "Farp1", "Fgfr2", "Flna", "Flrt3", "Fzd5", "Gabrb3", "Ghrl", "Gnpat",
+         "Gphn", "Grm5", "Hnrnpk", "Hspa8", "Igsf9", "Insr", "Itga3", "Itpka", "Klk8",
+         "Lamb2", "Lgi2", "Lrfn2", "Lrfn5", "Lrrc4c", "Lrrk2", "Lrrtm2", "Lzts3",
+         "Magi2", "Marcks", "Mdga1", "Mdga2", "Mef2c", "Mfn2", "Myh10", "Ndrg1", 
+         "Nedd4", "Nfasc", "Nfatc4", "Nfia", "Nlgn1", "Nrcam", "Nrg1", 
+         "Nrg2", "Nrp1",  "Ntrk2", "Numb", "Obsl1", "Ophn1",
+         "Pak3", "Palm", "Pcdh17", "Pcdhgc4", "Pclo", "Pdlim5", "Pdzrn3", "Pfn1", 
+         "Pfn2", "Picalm", "Pik3r1", "Pin1", "Pmp22", "Ppfia2", "Ppfia4", "Prkca", 
+         "Prrt1", "Psen1", "Ptn", "Ptprf", "Ptprt", "Rab17", "Rab29", "Rab39b", 
+         "Rapsn", "Rhoa", "Rims4", "Rock2", "Sdf4", "Sdk1", "Septin7", "Setd5", 
+         "Sez6", "Sez6l", "Shank1", "Shank2", "Shank3", "Sipa1l1", "Six4", "Slitrk6", 
+         "Snta1", "Sorbs1", "Sparc", "Srcin1", "Srgn", "Ssh1", "St8sia2", "Syngap1",
+         "Tanc2", "Taok2", "Tnc", "Tubb5", "Vcp", "Vps35", "Wnt5a", "Wnt7b", "Ywhaz",
+         "Zmynd8", "Lgmn", "Tuba1b", "Cpa1","Gata6","Sox9","Onecut1","Ngn3","Nr5a2","Ptf1a","Pdx1",
+         "Ctrb1", "Reg1","Pkm","Soat1","Pgam1","Ifitm2","Cdk4","Cdkn2a")
 
 
 Axonogenesis <- c("Cckar","Slit3","Etv1","Sema7a","Cxcr4","Kif5c","Ptprm",
@@ -787,23 +828,31 @@ select_neural <- c("Actb","Tuba1b","Rock2")
 
 #library(biomaRt)
 
+#####
+
+#####
+#####
+##### VOLCANO
+#####
+#####
+#####
+
+
 results.sig <- dplyr::filter(results, abs(results$Estimate) > 0.5)
 results.sig <- dplyr::filter(results.sig, results.sig$`Pr(>|t|)` < 0.5)
 head(results.sig)
-#names(results.sig)[6] <- 'Pr(>|t|)'
+names(results.sig)[6] <- 'Pr(>|t|)'
 head(results.sig)
 
 mt_list = split(results.sig, f = results.sig$Contrast)
 
 names(mt_list)
 
-gene <- mt_list[[2]]
-
-gene <- results.sig
-
-kable(subset(results, Gene %in% goi & Subset == "Full ROI"), digits = 3,
-      caption = "DE results for Genes of Interest",
-      align = "lc", row.names = FALSE)
+gene <- mt_list[[25]]
+#gene <- results.sig
+head(gene)
+names(gene)[2] <- 'Gene'
+gene <- distinct(gene, Gene, .keep_all = T)
 
 
 
@@ -820,37 +869,40 @@ gene$Color <- factor(gene$Color,
 
 # pick top genes for either side of volcano to label
 # order genes for convenience:
+head(gene)
 gene$invert_P <- (-log10(gene$`Pr(>|t|)`)) * sign(gene$Estimate)
 top_g <- c()
 for(cond in c("Full ROI")) {
   ind <- gene$Subset == cond
   top_g <- c(top_g,
              gene[ind, 'Gene'][
-               order(gene[ind, 'invert_P'], decreasing = TRUE)[1:30]],
+               order(gene[ind, 'invert_P'], decreasing = TRUE)[1:50]],
              gene[ind, 'Gene'][
-               order(gene[ind, 'invert_P'], decreasing = FALSE)[1:30]])
+               order(gene[ind, 'invert_P'], decreasing = FALSE)[1:50]])
 }
 top_g <- unique(top_g)
+top_g
+head(gene)
 
-gene$Contrast
 
 #reverse log fold change to fit with label
 gene$Estimate1 <- gene$Estimate*(-1)
 # Graph results
 ggplot(gene,                                                             ###CHANGE
-       aes(x = Estimate1, y = -log10(`Pr(>|t|)`),
+       aes(x = Estimate, y = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
   geom_point() +
-  labs(x = "___ <- log2(FC) -> ___",                                       ###CHANGE
+  labs(x = "PanIN <- log2(FC) -> PDAC",                                       ###CHANGE
        y = "Significance, -log10(P)",
        color = "Significance") +
   scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue", `FDR < 0.05` = "lightblue",
                                 `P < 0.05` = "orange2",`NS or FC < 0.5` = "gray"),
                      guide = guide_legend(override.aes = list(size = 4))) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
-  geom_text_repel(data = subset(gene, Gene %in% top_g & FDR < 0.05),
+  #geom_text_repel(data = subset(gene, Gene %in% top_g & FDR < 0.01),
+  geom_text_repel(data = subset(gene, Gene %in% goi & FDR < 0.001),
                   size = 4, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2,
                   max.overlaps = 50) +
@@ -859,26 +911,49 @@ ggplot(gene,                                                             ###CHAN
 
 
 
+#####
+#####
+#####
+
+
+#####
+#####GO
+#####
 
 
 
+load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/GENELIST_11-2-22_MHL_class_with_int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/11-3-22_MHL_progression2_with_int.csv")
 
+head(results)
+names(results)[2] <- 'SYMBOL'
+names(results)[6] <- 'Pr(>|t|)'
+head(results)
 
-###GO
-names(results)[1] <- 'SYMBOL'
-eg <- bitr(results$SYMBOL, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+eg <- bitr(results$SYMBOL, fromType="SYMBOL", toType=c("ENTREZID"), #toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
            OrgDb="org.Mm.eg.db")
 results <- dplyr::left_join(results, eg, by = "SYMBOL")
 rm(eg)
 universe <- distinct(results, SYMBOL, .keep_all = T)
+head(universe)
 
+
+#resultsGO <- dplyr::filter(results, abs(results$Estimate) > 0.5 & results$'Pr(>|t|)' < 0.05)
+resultsGO <- dplyr::filter(results, abs(results$Estimate) > 1.0 & results$FDR < 0.05)
+#resultsGO <- dplyr::filter(results, abs(results$Estimate) > 0.5 & results$FDR < 0.05)
+#resultsGO <- dplyr::filter(results, abs(results$Estimate) > 0.5 & results$FDR < 0.01)
+summary(resultsGO)
+
+
+mt_list = split(resultsGO, f = resultsGO$Contrast)
+summary(mt_list)
+names(mt_list)7
+gene <- mt_list[[27]]
 head(gene)
-names(gene)[1] <- 'SYMBOL'
-eg <- bitr(gene$SYMBOL, fromType="SYMBOL", toType=c("ENTREZID"),
-           OrgDb="org.Mm.eg.db")
-gene <- dplyr::left_join(gene, eg, by = "SYMBOL")
-rm(eg)
-
 
 ego <- enrichGO(gene          = gene$ENTREZID,
                 keyType       = "ENTREZID",
@@ -892,14 +967,20 @@ ego <- enrichGO(gene          = gene$ENTREZID,
 
 dotplot(ego)
 upsetplot(ego)
-library(topGO)
-plotGOgraph(ego)
+plotGOgraph(ego, useFullNames = T, useInfo = "names")
+
+selected_pathways <- c("synapse organization",
+                       "synaptogenesis",
+                       "gliogenesis",
+                       "axonogenesis", 
+                       "cell-substrate adhesion",
+                       "oligodendrocyte development", 
+                       "neurogenesis",
+                       "cell-substrate adhesion",
+                       "regulation of actin cytoskeleton organization")
+dotplot(ego, showCategory = selected_pathways, font.size=10)
 
 head(ego,10)
-
-
-
-
 
 ggplot(ego[1:20], aes(x=reorder(Description, -pvalue), y=Count, fill=-p.adjust)) +
   geom_bar(stat = "identity") +
@@ -910,91 +991,265 @@ ggplot(ego[1:20], aes(x=reorder(Description, -pvalue), y=Count, fill=-p.adjust))
 
 str(ego)
 
-## extract a dataframe with results from object of type enrichResult
-egobp.results.df <- ego@result
-head(egobp.results.df)
-
-## create a new column for term size from BgRatio
-egobp.results.df$term.size <- gsub("/(\\d+)", "", egobp.results.df$BgRatio)
-
-## filter for term size to keep only term.size => 3, gene count >= 5 and subset
-egobp.results.df <- egobp.results.df[which(egobp.results.df[,'term.size'] >= 3 & egobp.results.df[,'Count'] >= 5),]
-egobp.results.df <- egobp.results.df[c("ID", "Description", "pvalue", "qvalue", "geneID")]
-
-## format gene list column
-egobp.results.df$geneID <- gsub("/", ",", egobp.results.df$geneID)
-
-## add column for phenotype
-egobp.results.df <- cbind(egobp.results.df, phenotype=1)
-egobp.results.df <- egobp.results.df[, c(1, 2, 3, 4, 6, 5)]
-
-## change column headers
-colnames(egobp.results.df) <- c("Name","Description", "pvalue","qvalue","phenotype", "genes")
-
-egobp.results.filename <-file.path(getwd(),paste("clusterprofiler_cluster_enr_results.txt",sep="_"))
-write.table(egobp.results.df,egobp.results.filename,col.name=TRUE,sep="\t",row.names=FALSE,quote=FALSE)
-
-em_command = paste('enrichmentmap build analysisType="generic" ', 
-                   'pvalue=',"0.05", 'qvalue=',"0.05",
-                   'similaritycutoff=',"0.25",
-                   'coeffecients=',"JACCARD",
-                   'enrichmentsDataset1=',egobp.results.filename ,
-                   sep=" ")
-
-#enrichment map command will return the suid of newly created network.
-em_network_suid <- commandsRun(em_command)
-
-renameNetwork("Cluster1_enrichmentmap_cp", network=as.numeric(em_network_suid))
+#####
 
 
 
 
+#####
+##### CompareCluster()
+#####
 
-
-
-
-
-gene1 <- filter(gene, FDR < 0.001)
-setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-write.csv(gene1, file = '___MHLnumber.csv')
-
-
-
-library(patchwork)
-setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-tiff("Volcano.tiff", units="in", width=18, height=15, res=300)
-p01 + p02 + p03 + p04 + p05 + p06  
-  plot_layout(guides = "collect") 
-dev.off()
-
-
-
-
-
-
-
-
-
-
+#load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
 #results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
-results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
 #results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
-results1 <- dplyr::filter(results, abs(results$Estimate) > 0.5)
-head(results1)
-names(results1)[6] <- 'Pr(>|t|)'
-head(results1)
-mt_list = split(results1, f = results1$Contrast)
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/GENELIST_11-2-22_MHL_class_with_int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/GENE LIST 07.06.22_comps_MHL_WITH.int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/11-3-22_MHL_progression2_with_int.csv")
+
+head(results)
+#names(results)[2] <- 'SYMBOL'
+names(results)[8] <- 'Pr(>|t|)'
+head(results)
+
+eg <- bitr(results$SYMBOL, fromType="SYMBOL", toType=c("ENTREZID"), #toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+           OrgDb="org.Mm.eg.db")
+results <- dplyr::left_join(results, eg, by = "SYMBOL")
+rm(eg)
+universe <- distinct(results, SYMBOL, .keep_all = T)
+head(universe)
+
+resultsGO <- dplyr::filter(results, abs(results$Estimate) > 0.5)# & results$FDR < 0.1)
+#resultsGO <- dplyr::filter(results, results$Estimate > 0.5 & results$'Pr(>|t|)' < 0.05)
+#resultsGO <- dplyr::filter(results, results$Estimate < -0.5 & results$FDR < 0.05)
+#resultsGO <- dplyr::filter(results, results$Estimate < -0.5 & results$'Pr(>|t|)' < 0.05)
+
+resultsGO <- dplyr::filter(results, abs(results$Estimate) > 0.5 & results$FDR < 0.1)
+#resultsGO <- dplyr::filter(results, abs(results$Estimate) > 1.0 & results$'Pr(>|t|)' < 0.05)
+#resultsGO <- dplyr::filter(results, abs(results$Estimate) > 0.5 & results$FDR < 0.05)
+#resultsGO <- dplyr::filter(results, abs(results$Estimate) > 1.0 & results$FDR < 0.01)
+summary(resultsGO)
+
+
+# ###Create files for up and down regulated
+# resultsGO.up <- dplyr::filter(results, results$Estimate > 0.5)
+# resultsGO.down <- dplyr::filter(results, results$Estimate < -0.5)
+# write.csv(resultsGO.up,"C:/Users/edmondsonef/Desktop/resultsGO.up.csv")
+# 
+# resultsGO.up <- read.csv("C:/Users/edmondsonef/Desktop/resultsGO.up.csv")
+# unique(resultsGO.up$Contrast)
+# resultsGO.down <- read.csv("C:/Users/edmondsonef/Desktop/resultsGO.down.csv")
+# unique(resultsGO.down$Contrast)
+# finalGL <- dplyr::bind_rows(resultsGO.down, resultsGO.up)
+# 
+# head(finalGL)
+# names(finalGL)[7] <- 'Pr(>|t|)'
+# write.csv(finalGL, "C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/GENE LIST 07.06.22_comps_MHL_WITH.int.csv")
+# 
+
+#gcSample =  list of different samples
+resultsCC <- dplyr::select(resultsGO, Estimate, Contrast, ENTREZID)
+unique(resultsCC$Contrast)
+
+# resultsCC <- dplyr::filter(resultsCC, Contrast == c("1-Normal acini - 4-PanINlo",
+#                                                   "1-Normal acini - 5-PanINhi",
+#                                                   "5-PanINhi - 6-PDAC",
+#                                                   "4-PanINlo - 6-PDAC"))
+
+
+# resultsCC <- dplyr::filter(resultsCC, Contrast == c("ADM", "Bystander",
+#                                                   "Acinar",
+#                                                   "PanIN",
+#                                                   "Carcinoma",
+#                                                   "Islet",
+#                                                   "IPMN",
+#                                                   "Stroma"))
+resultsCC <- dplyr::filter(resultsCC, Contrast == c("ADM",
+                                                  "Normal acini",
+                                                  "PanIN",
+                                                  "PDAC"))
+
+#Create a list containing gene IDs for each category
+ids <- unique(resultsCC$Contrast)
+mt_list<-list()
+for(i in 1:length(ids)){
+  id <- ids[i]
+  df <- dplyr::filter(resultsCC, resultsCC$Contrast == id)
+  mt_list[[i]]<-  as.character(df$ENTREZID)
+}
+###CHECK THAT ROW NAMES ARE ACCURATE
+names(mt_list) <- c(ids) 
+str(mt_list)
+
+ck <- compareCluster(geneCluster = mt_list, 
+                     fun = enrichGO, #"groupGO", "enrichGO", "enrichKEGG", "enrichDO" or "enrichPathway"
+                     ont = "BP", OrgDb = org.Mm.eg.db)
+ck <- setReadable(ck, OrgDb = org.Mm.eg.db, keyType="ENTREZID")
+ck <- pairwise_termsim(ck)
+dotplot(ck)
+
+
+
+#Create geneList
+head(resultsGO)
+gene <- distinct(resultsGO, SYMBOL, .keep_all = T)
+geneList = gene$Estimate
+names(geneList) = as.character(gene$ENTREZID)
+geneList = sort(geneList, decreasing = T)
+
+
+
+
+set.seed(2022-11-2)
+selected_pathways <- c("synapse organization",
+                       "synaptogenesis",
+                       #"gliogenesis",
+                       "axonogenesis")#, 
+                       #"cell-substrate adhesion",
+                       "oligodendrocyte development", 
+                       "neurogenesis", 
+                       #"regulation of translation",
+                       #"cell-substrate adhesion")#,
+                       #"regulation of actin cytoskeleton organization")
+                       #"negative regulation of neural precursor cell")
+dotplot(ck, showCategory = selected_pathways, font.size=10)
+
+cnetplot(ck, node_label="category", showCategory = selected_pathways,
+         cex_label_category = 1.2, foldChange=geneList) 
+cnetplot(ck, node_label="gene",showCategory = selected_pathways, 
+         cex_label_category = 1.2) 
+cnetplot(ck, node_label="all", showCategory = selected_pathways,
+         cex_label_category = 3.2,cex_label_gene = 2.5)#, foldChange=geneList) 
+cnetplot(ck, foldChange=geneList)
+
+
+ck <- pairwise_termsim(ck)
+ck2 <- simplify(ck, cutoff=0.7, by="p.adjust", select_fun=min)
+dotplot(ck2)
+emapplot(ck, legend_n=2) 
+emapplot(ck, pie="count", cex_category=1.5, layout="kk")
+
+cnetplot(ck, circular = T, colorEdge = TRUE, showCategory = selected_pathways) 
+
+head(resultsCC)
+mt_list = split(resultsCC, f = resultsCC$Contrast)
+
+mydf <- data.frame(Entrez=names(geneList), FC=geneList)
+mydf <- mydf[abs(mydf$FC) > 1,]
+mydf$group <- "upregulated"
+mydf$group[mydf$FC < 0] <- "downregulated"
+mydf$othergroup <- "A"
+mydf$othergroup[abs(mydf$FC) > 2] <- "B"
+
+formula_res <- compareCluster(Entrez~class, data=mydf, fun="enrichKEGG")
+
+head(formula_res)
+
+
+
 names(mt_list)
-gene <- mt_list[[23]]
+gene <- resultsCC
 head(gene)
 
 
+gene <- distinct(gene, SYMBOL, .keep_all = T)
+
+#####gseGO()
+head(gene)
+## assume 1st column is ID
+## 2nd column is FC
+## feature 1: numeric vector
+geneList = gene[,1] #which column? 
+head(geneList)
+
+names(geneList) = as.character(gene[,3])
+head(geneList)
+geneList = sort(geneList, decreasing = T)
+head(geneList)
+
+#"BP" = biological process
+#"MF" = molecular function
+#"CC" = cellular component
+
+ego3 <- gseGO(geneList     = geneList, ##??
+              OrgDb        = org.Mm.eg.db,
+              ont          = "BP", #"BP", "MF", and "CC"
+              minGSSize    = 100,
+              maxGSSize    = 500,
+              pvalueCutoff = 0.05,
+              verbose      = FALSE)
+
+#head(ego3)
+goplot(ego3)
+dotplot(ego3)
+upsetplot(ego3, 10)
+
+
+
+
+
+
+
+###
+###
+#GENE CONCEPT NETWORK
+ego <- pairwise_termsim(ego)
+ego2 <- simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min)
+
+selected_pathways <- c("synapse organization",
+                       "axonogenesis", 
+                       "cell-substrate adhesion")
+
+selected_pathways <- c("synapse organization",
+                       "synaptogenesis",
+                       "gliogenesis",
+                       "axonogenesis", 
+                       "cell-substrate adhesion",
+                       "regulation of neurogenesis", 
+                       "neurogenesis",
+                       "cell-substrate adhesion",
+                       "regulation of actin cytoskeleton organization")
+dotplot(ego2, showCategory = selected_pathways, font.size=10)
+cnetplot(ego2, node_label="all", categorySize="pvalue", showCategory = selected_pathways, foldChange=geneList)
+cnetplot(edox, foldChange=geneList, circular = T, colorEdge = TRUE, showCategory = "axonogenesis") 
+heatplot(ego, foldChange=geneList, showCategory=selected_pathways)
+
+library(clusterProfiler)
+data(gcSample)
+xx <- compareCluster(gcSample, fun="enrichKEGG",
+                     organism="hsa", pvalueCutoff=0.05)
+xx <- pairwise_termsim(xx)                     
+p1 <- emapplot(xx)
+p2 <- emapplot(xx, legend_n=2) 
+p3 <- emapplot(xx, pie="count")
+p4 <- emapplot(xx, pie="count", cex_category=1.5, layout="kk")
+###
+###
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#####
+#####PLOTTING GENES
+#####
+#####
 ## ----targetTable, eval = TRUE, as.is = TRUE-----------------------------------
-load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
 
+#load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_DSP.RData")
 
 head(gene)
-names(gene)[2] <- 'Gene'
+names(gene)[1] <- 'Gene'
 head(gene)
 
 kable(subset(gene, Gene %in% c("Pdzd8", "Mtch2", "Spock3", "Serpina3k", "Cybrd1", "Vars2")), 
@@ -1005,24 +1260,17 @@ kable(subset(gene, Gene %in% c("Pdzd8")), row.names = FALSE)
 ## ----targetExprs, eval = TRUE-------------------------------------------------
 # show expression for a single target: PDHA1
 ggplot(pData(target_myData),
-       aes(x = progression1, fill = progression1,
-           y = assayDataElement(target_myData["Nfib", ],
+       aes(x = progression2, fill = progression2,
+           y = assayDataElement(target_myData["Kras", ],
                                 elt = "q_norm"))) +
   geom_violin() +
   geom_jitter(width = .2) +
   labs(y = "") +
   scale_y_continuous(trans = "log2") +
-  #facet_wrap(~class) +
+  #facet_wrap(~Strain) +
   theme_bw()+
   theme(legend.position = "none")+
-  theme(axis.title.x=element_blank(), text = element_text(size = 18))
-
-
-
-
-
-
-
+  theme(axis.title.x=element_blank(), text = element_text(size = 24))
 
 
 ## ----targetExprs2, fig.width = 8, fig.wide = TRUE, eval = TRUE----------------
@@ -1049,8 +1297,8 @@ ggplot(pData(target_myData),
   scale_x_continuous(trans = "log2") + 
   scale_y_continuous(trans = "log2") +
   labs(x = "Trp53 Expression", y = "Msln Expression") 
- #+
-  #facet_wrap(~class)
+#+
+#facet_wrap(~class)
 
 ## ----heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE----
 # select top significant genes based on significance, plot with pheatmap
@@ -1073,9 +1321,9 @@ gene$MeanExp <-
                             elt = "q_norm"))
 
 top_g2 <- gene$Gene[gene$Gene %in% top_g &
-                         gene$FDR < 0.001 &
-                         abs(gene$Estimate) > .5 &
-                         gene$MeanExp > quantile(gene$MeanExp, 0.9)]
+                      gene$FDR < 0.001 &
+                      abs(gene$Estimate) > .5 &
+                      gene$MeanExp > quantile(gene$MeanExp, 0.9)]
 
 ggplot(subset(gene, !Gene %in% neg_probes),
        aes(x = MeanExp, y = Estimate,
@@ -1099,6 +1347,60 @@ ggplot(subset(gene, !Gene %in% neg_probes),
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### FORMAT DATA
+
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/11-2-22_MHL_class_with_int.csv")
+
+results <- dplyr::filter(results, abs(results$Estimate) > 0.5)
+
+head(results)
+names(results)[6] <- 'Pr(>|t|)'
+head(results)
+
+results <- dplyr::filter(results, results$'Pr(>|t|)' < 0.05)
+
+names(results)[2] <- 'SYMBOL'
+eg <- bitr(results$SYMBOL, fromType="SYMBOL", toType=c("ENSEMBL", "ENTREZID", "UNIPROT"),
+           OrgDb="org.Mm.eg.db")
+results <- dplyr::left_join(results, eg, by = "SYMBOL")
+rm(eg)
+universe <- distinct(results, SYMBOL, .keep_all = T)
+
+
+
+results.up <- dplyr::filter(results, results$Estimate > 0)
+results.down <- dplyr::filter(results, results$Estimate < 0)
+names(results)
+head(results)
+results_list = split(results, f = results$Contrast)
+names(results_list)
+
+results.down_list = split(results.down, f = results.down$Contrast)
+names(results.down_list)
+
+results.up_list = split(results.up, f = results.up$Contrast)
+#results <- distinct(results, SYMBOL, .keep_all = T)
+
+write.csv(genelist, "C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/GENELIST_11-2-22_MHL_class_with_int.csv")
+#results.up1 <- read.csv("C:/Users/edmondsonef/Desktop/results.up.csv")
+
+genelist <- dplyr::bind_rows(results.up1, results.down1)
 
 
 
