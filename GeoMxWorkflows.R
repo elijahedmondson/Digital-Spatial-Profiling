@@ -582,6 +582,8 @@ target_myData <- normalize(target_myData , data_type = "RNA",
 library(umap)
 library(Rtsne)
 
+shapes = c(15,16,17,18,19,20,21,22,23,24,25)
+
 # update defaults for umap to contain a stable random_state (seed)
 custom_umap <- umap::umap.defaults
 custom_umap$random_state <- 42
@@ -590,11 +592,15 @@ umap_out <-
   umap(t(log2(assayDataElement(target_myData , elt = "q_norm"))),  
        config = custom_umap)
 pData(target_myData)[, c("UMAP1", "UMAP2")] <- umap_out$layout[, c(1,2)]
-ggplot(pData(target_myData),
-       aes(x = UMAP1, y = UMAP2, color = comps, shape = Call, label=dsxf)) +
+umapplot <-ggplot(pData(target_myData),
+       aes(x = UMAP1, y = UMAP2, color = dx, label=dx, size = 20)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   theme_bw()+
+  #theme(text = element_text(size = 10)) +
   theme(legend.position="none")
+
+ggsave(umapplot, file="C:/Users/edmondsonef/Desktop/umap.png", width = 12, height = 7, units = "in", bg = "white")
+
 
 # run tSNE
 set.seed(42) # set the seed for tSNE as well
@@ -603,7 +609,7 @@ tsne_out <-
         perplexity = ncol(target_myData)*.15)
 pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_myData),
-       aes(x = tSNE1, y = tSNE2, color = comps, shape = Call, label=dsxf)) +
+       aes(x = tSNE1, y = tSNE2, color = dxIPMN, label=dxIPMN, size = 5)) +
   geom_point(size = 3) +geom_text(hjust=1.1, vjust=0.2)+
   theme_bw()+
   theme(legend.position="none")
@@ -622,7 +628,7 @@ percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
 
 
 ggplot(pData(target_myData),
-               aes(x = PC1, y = PC2, color=comps, label=dsxf)) +
+               aes(x = PC1, y = PC2, color=class, label=class)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
@@ -728,8 +734,9 @@ write.csv(results, "C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/11-3-22_MHL_p
 ##### GENE NAME LISTS
 #####
 
-goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam","Cre",
-         "Krt18", "Notch1", "Notch2", "Notch3", "Notch4","Cldn8",
+goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam","Cre", "Smad4",
+         "Krt18", "Notch1", "Notch2", "Notch3", "Notch4","Cldn8", "Tubb5",
+         "Cdkn2a","Plp2","Cdkn2a","Anxa1","Anxa2",
          "Cdk6","Msh3","Myc","Mastl", "Sox2","Cav1","Fosl1","Gata4",
          "Cldn18","Capn6","Cpa1","Muc5ac","Tff1","Smad4",
          "Ptf1a","Pdx1","Nr5a2","Neurog3","Bhlha15","Krt19","Dclk1",
@@ -743,7 +750,7 @@ goi <- c("Kras", "Trp53", "Cd274", "Cd8a", "Cd68", "Epcam","Cre",
          "Ptprs","Bsg","Smad4","Bcl2","Trak1","Ptch1","
 Islr2","Taok2","Cdkl3","Actb","Ednra","Pip5k1c",
          "Sptbn4","Lama5","Ablim1","Rtn4","Wnt7b","Spg11","
-Golga4","Dock7","Ephb2","Cacna1a","Ptpn11","B4gat1",
+Golga4","Dock7","Ephb2","Cacna1a","Ptpn11",#"B4gat1",
          "Smo","B4galt6","Rab3a","Ntrk3","Neo1","Lrp1",
          "Atp5g1","Kif5b","Brsk2","Erbb2","Map1a","Flrt2",
          "Map1s","Chrnb2","Fstl4","Lrp4","Dag1","Sin3a",
@@ -753,28 +760,28 @@ Ephb4","Flot1","Sema4c","Gsk3b","Sema3d","Aatk","Cdh4",
          "Tubb3","Agrn","Evl","Brsk1","Notch3","Fzd3",
          "Hsp90aa1","Nrn1","Bcl11a","Sema4g","Lama3","Epha8",
          "Ntn5","Amigo1","Apbb1","Mgll","Ret","Atp8a2","
-Alcam","Unc5a","Grin1","Cntn6","Wnt7a","Pou4f3","Shh", "Abl2", "Ache", "Actb", "Actr3", "Adam10", "Adgrb2", 
-         "Adgre5", "Adgrf1", "Adgrl3", "Adnp", "Arf1", "Arf4", "Arf6", "Arhgap44", 
+Alcam","Unc5a","Grin1","Cntn6","Wnt7a","Pou4f3","Shh", "Abl2", "Ache", "Actb", "Actr3", "Adam10", #"Adgrb2", 
+         #"Adgre5", "Adgrf1", "Adgrl3", "Adnp", "Arf1", "Arf4", "Arf6", "Arhgap44", 
          "Baiap2", "Bhlhb9", "C1qa", "C1ql1", "C3", "Cacna1a", "Cacna1s", "Cacnb1", 
-         "Cacnb4", "Camk1", "Camk2b", "Caprin1", "Cel", "Cfl1", "Chchd10", "Chd4", 
+         "Cacnb4", "Camk1", "Camk2b", "Caprin1", "Cel", "Cfl1", #"Chchd10", "Chd4", 
          "Chrnb1", "Clstn1", "Cnksr2", "Cntnap4", "Col4a1", "Col4a5", "Ctnnb1", 
-         "Cttn", "Cttnbp2", "Cyfip1", "Dact1", "Dag1", "Dbn1", "Dctn1", "Dlgap3",
+         "Cttn", "Cttnbp2", "Cyfip1",# "Dact1", "Dag1", "Dbn1", "Dctn1", "Dlgap3",
          "Dock10", "Drd1", "Efna1", "Efnb2", "Eif4g1", "Epha4", "Ephb2", "Erbb4", 
          "F2r", "Farp1", "Fgfr2", "Flna", "Flrt3", "Fzd5", "Gabrb3", "Ghrl", "Gnpat",
          "Gphn", "Grm5", "Hnrnpk", "Hspa8", "Igsf9", "Insr", "Itga3", "Itpka", "Klk8",
-         "Lamb2", "Lgi2", "Lrfn2", "Lrfn5", "Lrrc4c", "Lrrk2", "Lrrtm2", "Lzts3",
+         "Lamb2", "Lgi2", #"Lrfn2", "Lrfn5", "Lrrc4c", "Lrrk2", "Lrrtm2", "Lzts3",
          "Magi2", "Marcks", "Mdga1", "Mdga2", "Mef2c", "Mfn2", "Myh10", "Ndrg1", 
          "Nedd4", "Nfasc", "Nfatc4", "Nfia", "Nlgn1", "Nrcam", "Nrg1", 
          "Nrg2", "Nrp1",  "Ntrk2", "Numb", "Obsl1", "Ophn1",
-         "Pak3", "Palm", "Pcdh17", "Pcdhgc4", "Pclo", "Pdlim5", "Pdzrn3", "Pfn1", 
+         "Pak3", "Palm", "Pcdh17", #"Pcdhgc4", "Pclo", "Pdlim5", "Pdzrn3", "Pfn1", 
          "Pfn2", "Picalm", "Pik3r1", "Pin1", "Pmp22", "Ppfia2", "Ppfia4", "Prkca", 
          "Prrt1", "Psen1", "Ptn", "Ptprf", "Ptprt", "Rab17", "Rab29", "Rab39b", 
          "Rapsn", "Rhoa", "Rims4", "Rock2", "Sdf4", "Sdk1", "Septin7", "Setd5", 
-         "Sez6", "Sez6l", "Shank1", "Shank2", "Shank3", "Sipa1l1", "Six4", "Slitrk6", 
+         #"Sez6", "Sez6l", "Shank1", "Shank2", "Shank3", "Sipa1l1", "Six4", "Slitrk6", 
          "Snta1", "Sorbs1", "Sparc", "Srcin1", "Srgn", "Ssh1", "St8sia2", "Syngap1",
          "Tanc2", "Taok2", "Tnc", "Tubb5", "Vcp", "Vps35", "Wnt5a", "Wnt7b", "Ywhaz",
          "Zmynd8", "Lgmn", "Tuba1b", "Cpa1","Gata6","Sox9","Onecut1","Ngn3","Nr5a2","Ptf1a","Pdx1",
-         "Ctrb1", "Reg1","Pkm","Soat1","Pgam1","Ifitm2","Cdk4","Cdkn2a")
+         "Ctrb1", "Reg1","Pkm","Soat1","Pgam1","Ifitm2","Cdk4","Cdkn2a", "Ctse")
 
 
 Axonogenesis <- c("Cckar","Slit3","Etv1","Sema7a","Cxcr4","Kif5c","Ptprm",
@@ -836,19 +843,26 @@ select_neural <- c("Actb","Tuba1b","Rock2")
 #####
 #####
 #####
+load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/GENELIST_11-2-22_MHL_class_with_int.csv")
+#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/11-3-22_MHL_progression2_with_int.csv")
 
 
 results.sig <- dplyr::filter(results, abs(results$Estimate) > 0.5)
-results.sig <- dplyr::filter(results.sig, results.sig$`Pr(>|t|)` < 0.5)
+
 head(results.sig)
 names(results.sig)[6] <- 'Pr(>|t|)'
 head(results.sig)
+results.sig <- dplyr::filter(results.sig, results.sig$`Pr(>|t|)` < 0.5)
 
 mt_list = split(results.sig, f = results.sig$Contrast)
 
 names(mt_list)
 
-gene <- mt_list[[25]]
+gene <- mt_list[[7]]
 #gene <- results.sig
 head(gene)
 names(gene)[2] <- 'Gene'
@@ -888,13 +902,13 @@ head(gene)
 #reverse log fold change to fit with label
 gene$Estimate1 <- gene$Estimate*(-1)
 # Graph results
-ggplot(gene,                                                             ###CHANGE
-       aes(x = Estimate, y = -log10(`Pr(>|t|)`),
+avp1 <- ggplot(gene,                                                             ###CHANGE
+       aes(x = Estimate1, y = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
   geom_point() +
-  labs(x = "PanIN <- log2(FC) -> PDAC",                                       ###CHANGE
+  labs(x = "Normal Acini <- log2(FC) -> PanIN",                                       ###CHANGE
        y = "Significance, -log10(P)",
        color = "Significance") +
   scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue", `FDR < 0.05` = "lightblue",
@@ -903,12 +917,13 @@ ggplot(gene,                                                             ###CHAN
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
   #geom_text_repel(data = subset(gene, Gene %in% top_g & FDR < 0.01),
   geom_text_repel(data = subset(gene, Gene %in% goi & FDR < 0.001),
-                  size = 4, point.padding = 0.15, color = "black",
+                  size = 6, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2,
                   max.overlaps = 50) +
-  theme_bw(base_size = 16) +
+  theme_bw(base_size = 15) +
   theme(legend.position = "bottom") 
-
+avp1
+ggsave(avp1, file="C:/Users/edmondsonef/Desktop/avp1.png", width = 12, height = 10, units = "in", bg = "white")
 
 
 #####
@@ -927,7 +942,7 @@ load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
 results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
 results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
 #results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/GENELIST_11-2-22_MHL_class_with_int.csv")
-#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/11-3-22_MHL_progression2_with_int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/11-3-22_MHL_progression2_with_int.csv")
 
 head(results)
 names(results)[2] <- 'SYMBOL'
@@ -982,7 +997,7 @@ dotplot(ego, showCategory = selected_pathways, font.size=10)
 
 head(ego,10)
 
-ggplot(ego[1:20], aes(x=reorder(Description, -pvalue), y=Count, fill=-p.adjust)) +
+ggplot(ck2[1:20], aes(x=reorder(Description, -pvalue), y=Count, fill=-p.adjust)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   scale_fill_continuous(low="blue", high="red") +
@@ -1081,15 +1096,19 @@ for(i in 1:length(ids)){
 ###CHECK THAT ROW NAMES ARE ACCURATE
 names(mt_list) <- c(ids) 
 str(mt_list)
-
+mmu_kegg = download_KEGG(species = 'mmu', keggType = "KEGG", keyType = "kegg")
 ck <- compareCluster(geneCluster = mt_list, 
-                     fun = enrichGO, #"groupGO", "enrichGO", "enrichKEGG", "enrichDO" or "enrichPathway"
-                     ont = "BP", OrgDb = org.Mm.eg.db)
+                     #fun = "enrichKEGG", organism = "mmu")
+                     #"groupGO", "enrichGO", "enrichKEGG", "enrichDO" or "enrichPathway"
+                     fun = "enrichGO", ont = "BP", OrgDb = org.Mm.eg.db)
 ck <- setReadable(ck, OrgDb = org.Mm.eg.db, keyType="ENTREZID")
 ck <- pairwise_termsim(ck)
-dotplot(ck)
+ck2 <- simplify(ck, cutoff=0.7, by="p.adjust", select_fun=min)
 
-
+dotplot(ck2)
+head(ck2)
+goplot(ck2)
+cnetplot(ck2)
 
 #Create geneList
 head(resultsGO)
@@ -1104,33 +1123,46 @@ geneList = sort(geneList, decreasing = T)
 set.seed(2022-11-2)
 selected_pathways <- c("synapse organization",
                        "synaptogenesis",
-                       #"gliogenesis",
-                       "axonogenesis")#, 
-                       #"cell-substrate adhesion",
+                       #"alpha-amino acid metabolic process",
+                       "gliogenesis",
+                       "axonogenesis", 
+                       "cell-substrate adhesion",
                        "oligodendrocyte development", 
-                       "neurogenesis", 
-                       #"regulation of translation",
-                       #"cell-substrate adhesion")#,
-                       #"regulation of actin cytoskeleton organization")
-                       #"negative regulation of neural precursor cell")
-dotplot(ck, showCategory = selected_pathways, font.size=10)
+                       "neurogenesis",
+                       "actin filament organization",
+                       "regulation of translation",
+                       "cell-substrate adhesion",
+                       "regulation of actin cytoskeleton organization",
+                       "negative regulation of neural precursor cell")
+dotplot(ck2, showCategory = selected_pathways, font.size=10)
 
-cnetplot(ck, node_label="category", showCategory = selected_pathways,
-         cex_label_category = 1.2, foldChange=geneList) 
-cnetplot(ck, node_label="gene",showCategory = selected_pathways, 
+ 
+cnetplot(ck2, node_label="gene",showCategory = selected_pathways, 
          cex_label_category = 1.2) 
-cnetplot(ck, node_label="all", showCategory = selected_pathways,
-         cex_label_category = 3.2,cex_label_gene = 2.5)#, foldChange=geneList) 
-cnetplot(ck, foldChange=geneList)
+cnetplot(ck2, node_label="all", showCategory = selected_pathways,
+         cex_label_category = 3.2,cex_label_gene = 1.7)#, foldChange=geneList) 
 
 
-ck <- pairwise_termsim(ck)
-ck2 <- simplify(ck, cutoff=0.7, by="p.adjust", select_fun=min)
-dotplot(ck2)
+
+
 emapplot(ck, legend_n=2) 
 emapplot(ck, pie="count", cex_category=1.5, layout="kk")
 
 cnetplot(ck, circular = T, colorEdge = TRUE, showCategory = selected_pathways) 
+
+
+p1 <- treeplot(ck2)
+p2 <- treeplot(ck2, hclust_method = "average", showCategory = selected_pathways)
+aplot::plot_list(p1, p2, tag_levels='A')
+
+cnet <- cnetplot(ck2, node_label="all", showCategory = selected_pathways,
+                 cex_label_category = 2.5,cex_label_gene = 1.3, foldChange=geneList)
+cnet
+
+ggsave(cnet, file="C:/Users/edmondsonef/Desktop/cnet.png", width = 15, height = 15, units = "in", bg = "white")
+
+
+
 
 head(resultsCC)
 mt_list = split(resultsCC, f = resultsCC$Contrast)
