@@ -45,7 +45,6 @@ levels(x = mySeurat) <- c("Normal acini", "ADM","PanIN","Carcinoma", "Metastasis
 features <- c("Kras","Trp53","Cre","Pdx1",
               "Pdia2","Cel", "Reg1","Pnliprp1","Try4",
               "Hnf1b","Sox9","Krt19","Onecut1")#
-              "Agr2","Runx1","Smad4","Krt19","Rock2","Fos","Ephb2","Sema4b")
          #"Krt18", "Notch1", "Notch2", "Notch3", "Notch4","Cldn8","Cd274", "Cd8a", "Cd68",
          #"Cdk6","Msh3","Mastl", "Sox2","Cav1","Fosl1","Gata4",
          #"Cldn18","Capn6",
@@ -100,6 +99,13 @@ levels(mySeurat)
 levels(mySeurat) <- c("Metastasis","Carcinoma", "PanIN","ADM","Bystander","Normal acini",
                       "Normal Islet", "EMT", "Stroma")
 #levels(x = mySeurat) <- c("1-Normal acini", "2-Bystander","3-ADM","4-PanINlo","5-PanINhi","6-PDAC","7-metastasis")
+
+
+features <- c("Net1","Rock2","Prom1","Nt5c2", 
+               "Ephb2","Sema4b","Sema4g","Lama5",
+              "St8sia3","Dnajc10","Nfib", "Cybrd1", 
+              "Porcn","Actb","Tuba1a","Tuba1b")
+
 fig <- RidgePlot(mySeurat, sort = F, #split.by = "dx3.KPC",
           idents = c("Metastasis","Carcinoma", "PanIN","ADM","Bystander","Normal acini"), 
           #idents = c("7-metastasis", "6-PDAC","5-PanINhi","4-PanINlo","3-ADM","2-Bystander","1-Normal acini"),
@@ -108,7 +114,7 @@ fig
 
 
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-tiff("fig2.tiff", units="in", width=14, height=8, res=300)
+tiff("fig2.tiff", units="in", width=14, height=10, res=300)
 fig
 dev.off()
 
