@@ -98,23 +98,34 @@ list <- c("Ncald", "St8sia3", "Camk2n1", "Atrnl1", "Spock3", "Rasgrf1")
 levels(mySeurat)
 levels(mySeurat) <- c("Metastasis","Carcinoma", "PanIN","ADM","Bystander","Normal acini",
                       "Normal Islet", "EMT", "Stroma")
-#levels(x = mySeurat) <- c("1-Normal acini", "2-Bystander","3-ADM","4-PanINlo","5-PanINhi","6-PDAC","7-metastasis")
+levels(mySeurat) <- c("Metastasis","Carcinoma", "PanIN3","PanIN2", "PanIN1", "ADM","Bystander","Normal acini")
+
+levels(x = mySeurat) <- c("1-Normal acini", "2-Bystander","3-ADM","4-PanINlo","5-PanINhi","6-PDAC","7-metastasis")
+levels(x = mySeurat) <- c("Metastasis","Carcinoma", "PanIN3","PanIN2", "PanIN1", "ADM","Bystander","Normal acini")
 
 
 features <- c("Net1","Rock2","Prom1","Nt5c2", 
                "Ephb2","Sema4b","Sema4g","Lama5",
               "St8sia3","Dnajc10","Nfib", "Cybrd1", 
-              "Porcn","Actb","Tuba1a","Tuba1b")
+              "Porcn","Actb","Tuba1a","Tuba1b",
+              "Dync1i2")
 
-fig <- RidgePlot(mySeurat, sort = F, #split.by = "dx3.KPC",
-          idents = c("Metastasis","Carcinoma", "PanIN","ADM","Bystander","Normal acini"), 
+features <- c("Ezr","Clu","S100a6", "Gsto1", "Gkn1", 
+              "Lypd8l", "Anxa2", "Cdh1", "Prom1", "Myrf", 
+              "Flna", "Slc12a2", "Actn1", "Fn1", "Hnf1b",
+              "Vasp","Vdac2", "Syncrip", "Rpl5", "Pard3",
+              "Dync1i2", "Calm1", "Calm2", "Calm3", "Itgb1")
+
+fig <- RidgePlot(mySeurat, sort = T, #split.by = "dx3.KPC",
+         #idents = c("Metastasis","Carcinoma", "PanIN","ADM","Bystander","Normal acini"), 
+          idents = c("Metastasis","Carcinoma", "PanIN3","PanIN2", "PanIN1", "ADM","Bystander","Normal acini"),
           #idents = c("7-metastasis", "6-PDAC","5-PanINhi","4-PanINlo","3-ADM","2-Bystander","1-Normal acini"),
-          features = features, ncol = 4)
+          features = features, ncol = 5)
 fig
 
 
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-tiff("fig2.tiff", units="in", width=14, height=10, res=300)
+tiff("fig2.tiff", units="in", width=16, height=15, res=300)
 fig
 dev.off()
 
