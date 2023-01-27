@@ -836,7 +836,7 @@ mt_list = split(results.sig, f = results.sig$Contrast)
 
 names(mt_list)
 
-gene <- mt_list[[7]]
+gene <- mt_list[[24]]
 #gene <- results.sig
 head(gene)
 names(gene)[2] <- 'Gene'
@@ -873,6 +873,41 @@ top_g
 head(gene)
 
 
+goi <- c("Rock2","Ephb2","Efnb2", "Adam10", "Mmp2", "Mmp9", "Rhof",
+              "Nrxn1", "Nrxn2", "Nrxn3", "Nrp2", "Sema3e",
+              "Lama5", "Itgb1", "Ezr", "Smad4", "Gsto1", "Gkn1", 
+              "Lypd8l", "Anxa2", "Cdh1", "Prom1", "Myrf", 
+              "Flna", "Slc12a2", "Actn1", "Fn1", "Hnf1b",
+              "Vasp","Vdac2", "Syncrip", "Rpl5", "Pard3",
+              "Dync1i2", "Calm1", "Calm2", "Calm3", "Itgb1",
+         "Kras","Trp53","Net1","Nt5c2","Ezr","Clu","S100a6",  
+              "Anxa2", "Myrf", "Sema4b","Sema4g","Efnb2",
+              "Flna", "Slc12a2", "Actn1", "Actb","Tuba1b",
+              "Vasp", "Syncrip", "Pard3","Rock2","Rac1", "Rhoa", "Cdc42",
+              "Dync1i2", "Calm1", "Calm2", "Calm3","Lama5", "Itgb1",
+         "Lama5", "Itgb1", "Itgb4", "Itga6", "Sdc1","Muc3a","Msln",
+         "Sema3f", "Nrp1","Sema7a","Sema3e","Sema4a","Sema4b","Sema4g",
+         "Efnb2", "Myo5b","Rock2", "Rhoa","Rhoc","Rac1","Cdc42", "Vcam1", "Ezr",
+         "Calm1", "Calm2", "Calm3", "Actb", "Efnb2","Flna","Lamb2","Picalm",
+         "Ablim1","Plxnb2","Erbb2","Dock7")
+
+goi <- c("Cckar","Slit3","Etv1","Sema7a","Cxcr4","Kif5c","Ptprm",
+"Ptprs","Bsg","Smad4","Bcl2","Trak1","Ptch1","
+Islr2","Taok2","Cdkl3","Actb","Ednra","Pip5k1c",
+"Sptbn4","Lama5","Ablim1","Rtn4","Wnt7b","Spg11","
+Golga4","Dock7","Ephb2","Cacna1a","Ptpn11","B4gat1",
+"Smo","B4galt6","Rab3a","Ntrk3","Neo1","Lrp1",
+"Atp5g1","Kif5b","Brsk2","Erbb2","Map1a","Flrt2",
+"Tsku","Map1s","Chrnb2","Fstl4","Lrp4","Dag1","Sin3a",
+"Mapk8ip3","Dclk1","Adnp","Celsr3","Rpl4","Tubb2b",
+"Efna5","Plxnb2","Ngf","Ache","Vim","Flrt3","Fgfr2","
+Ephb4","Flot1","Sema4c","Gsk3b","Sema3d","Aatk","Cdh4",
+"Tubb3","Agrn","Evl","Brsk1","Notch3","Fzd3",
+"Hsp90aa1","Nrn1","Bcl11a","Sema4g","Lama3","Epha8",
+"Ntn5","Amigo1","Apbb1","Mgll","Ret","Atp8a2","
+Alcam","Unc5a","Grin1","Cntn6","Wnt7a","Pou4f3","Shh")
+
+
 #reverse log fold change to fit with label
 gene$Estimate1 <- gene$Estimate*(-1)
 # Graph results
@@ -882,7 +917,7 @@ avp1 <- ggplot(gene,                                                            
   geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
   geom_hline(yintercept = -log10(0.05), lty = "dashed") +
   geom_point() +
-  labs(x = "Normal Acini <- log2(FC) -> PanIN",                                       ###CHANGE
+  labs(x = "PanIN <- log2(FC) -> PDAC",                                       ###CHANGE
        y = "Significance, -log10(P)",
        color = "Significance") +
   scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue", `FDR < 0.05` = "lightblue",
@@ -890,14 +925,14 @@ avp1 <- ggplot(gene,                                                            
                      guide = guide_legend(override.aes = list(size = 4))) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
   #geom_text_repel(data = subset(gene, Gene %in% top_g & FDR < 0.01),
-  geom_text_repel(data = subset(gene, Gene %in% goi & FDR < 0.001),
+  geom_text_repel(data = subset(gene, Gene %in% goi & FDR < 0.05),
                   size = 6, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2,
                   max.overlaps = 50) +
   theme_bw(base_size = 15) +
   theme(legend.position = "bottom") 
 avp1
-ggsave(avp1, file="C:/Users/edmondsonef/Desktop/avp1.png", width = 12, height = 10, units = "in", bg = "white")
+ggsave(avp1, file="C:/Users/edmondsonef/Desktop/avp1.png", width = 8, height = 8, units = "in", bg = "white")
 
 
 #####
@@ -912,7 +947,7 @@ ggsave(avp1, file="C:/Users/edmondsonef/Desktop/avp1.png", width = 12, height = 
 
 
 load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
-#results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
+results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_no.int.csv")
 results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.06.22_comps_MHL_WITH.int.csv")
 results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/07.08.22_class_MHL_no_int.csv")
 #results <- read.csv("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/GENELIST_11-2-22_MHL_class_with_int.csv")
