@@ -123,14 +123,37 @@ features <- c("Kras","Trp53","Net1","Nt5c2","Ezr","Clu","S100a6",
               "Vasp", "Syncrip", "Pard3","Rock2","Rac1", "Rhoa", "Cdc42",
               "Dync1i2", "Calm1", "Calm2", "Calm3","Lama5", "Itgb1")
 
-features <- c("Lama5", "Itgb1", "Itgb4", "Itga6", "Sdc1")
+
+
 features <- c("Sema3f", "Nrp1")
 
 features <- c("Sema7a","Sema3e","Sema4a","Sema4b","Sema4g","Efnb2", "Myo5b")
 
 features <- c("Rock2", "Rhoa","Rhoc","Rac1","Cdc42", "Vcam1", "Ezr")
 
-features <- c("Calm1", "Calm2", "Calm3")
+#LR pairs for Calm
+features <- c("Calm1", "Mylk",
+              "Calm1", "Ptpra",
+              "Calm2", "Mylk",
+              "Calm2", "Aqp1",
+              "Calm3", "Ar")
+#LR pairs for Lama5
+features <- c("Lama5", "Itgb1", 
+              "Lama5","Itgb4", 
+              "Lama5","Itga2",
+              "Lama5","Itga6", 
+              "Lama5","Sdc1",
+              "Lama5","Bcam")
+#LR pairs for Efnb2
+features <- c("Efnb2","Ephb6",
+              "Pecam1",
+              "Ephb4",
+              "Rhbdl2",
+              "Epha3",
+              "Ephb1",
+              "Ephb3",
+              "Ephb2",
+              "Epha4")
 
 fig <- RidgePlot(mySeurat, sort = T, #split.by = "dx3.KPC",
          #idents = c("Metastasis","Carcinoma", "PanIN","ADM","Bystander","Normal acini"), 
@@ -141,7 +164,7 @@ fig
 
 
 setwd("C:/Users/edmondsonef/Desktop/R-plots/")
-tiff("fig1.tiff", units="in", width=10, height=17, res=300)
+tiff("fig-LR_pairs_Efnb2.tiff", units="in", width=10, height=17, res=300)
 fig
 dev.off()
 
