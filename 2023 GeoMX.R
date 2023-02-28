@@ -481,7 +481,7 @@ custom_umap$random_state <- 42
 umap_out <-  umap(t(log2(assayDataElement(target_myData , elt = "q_norm"))),config = custom_umap)
 pData(target_myData)[, c("UMAP1", "UMAP2")] <- umap_out$layout[, c(1,2)]
 
-umapplot <-ggplot(pData(target_myData), aes(x = UMAP1, y = UMAP2, color = classes, label=IDs, size = 12)) +
+umapplot <-ggplot(pData(target_myData), aes(x = UMAP1, y = UMAP2, color = `slide name`, label=`IDs`, size = 12)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   theme_bw() #+
   #theme(text = element_text(size = 10)) +
@@ -489,7 +489,7 @@ umapplot <-ggplot(pData(target_myData), aes(x = UMAP1, y = UMAP2, color = classe
 
 umapplot
 
-ggsave(umapplot, file="C:/Users/edmondsonef/Desktop/umap.png", width = 12, height = 7, units = "in", bg = "white")
+ggsave(umapplot, file="C:/Users/edmondsonef/Desktop/umap1.png", width = 12, height = 7, units = "in", bg = "white")
 
 
 # run tSNE
@@ -498,7 +498,7 @@ tsne_out <- Rtsne(t(log2(assayDataElement(target_myData , elt = "q_norm"))), per
 pData(target_myData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 
 ggplot(pData(target_myData),
-       aes(x = tSNE1, y = tSNE2, color = classes, label=IDs, size = 5)) +
+       aes(x = tSNE1, y = tSNE2, color = `slide name`, label=IDs, size = 5)) +
   geom_point(size = 3) +geom_text(hjust=1.1, vjust=0.2)+
   theme_bw()+
   theme(legend.position="none")
@@ -517,7 +517,7 @@ percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
 
 
 ggplot(pData(target_myData),
-       aes(x = PC1, y = PC2, color=class, label=IDs)) +
+       aes(x = PC1, y = PC2, color=`slide name`, label=IDs)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
@@ -567,9 +567,9 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
 
 # convert test variables to factors
 pData(target_myData)$testRegion <- 
-  factor(pData(target_myData)$classes, c("PDAC", "Lung_met"))                           
+  factor(pData(target_myData)$classes, c("PDAC", "Liver_met"))                           
 pData(target_myData)[["slide"]] <-                                            ### Control for 
-  factor(pData(target_myData)[["Position"]])
+  factor(pData(target_myData)[["slide name"]])
 assayDataElement(object = target_myData, elt = "log_q") <-
   assayDataApply(target_myData, 2, FUN = log, base = 2, elt = "q_norm")
 

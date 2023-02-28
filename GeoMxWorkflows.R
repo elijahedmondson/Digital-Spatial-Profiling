@@ -46,7 +46,6 @@ library(topGO)
 #####
 
 
-knitr::opts_chunk$set(echo = TRUE)
 output_prefix<-"CPTR474"
 projectname<-"CPTR474"
 datadir<-"C:/Users/edmondsonef/Desktop/DSP GeoMX/data/WTA_04122022/raw_data"
@@ -85,14 +84,14 @@ kable(data.frame(PKCs = pkcs, modules = modules))
 
 
 #####
-# # select the annotations we want to show, use `` to surround column names with
+# select the annotations we want to show, use `` to surround column names with
 # # spaces or special symbols
 # count_mat <- count(pData(myData), `Position`, Class, Origin, Sex, Age, Strain, Call, dx)
 # # simplify the slide names
 # count_mat$`core` <- gsub("disease", "d",
 #                                gsub("normal", "n", count_mat$`Position`))
 # # gather the data and plot in order: class, slide name, region, segment
-# test_gr <- gather_set_data(count_mat, 1:7)
+# test_gr <- gather_set_data(count_mat)
 # test_gr$x <- factor(test_gr$x,
 #                     levels = c("Strain","Sex", "Age", "Position", "Class","Origin", "Call"))
 # # plot Sankey
@@ -100,12 +99,12 @@ kable(data.frame(PKCs = pkcs, modules = modules))
 #   geom_parallel_sets(aes(fill = dx), alpha = 0.5, axis.width = 0.1) +
 #   geom_parallel_sets_axes(axis.width = 0.2) +
 #   geom_parallel_sets_labels(color = "white", size = 4) +
-#   theme_classic(base_size = 17) + 
+#   theme_classic(base_size = 17) +
 #   theme(legend.position = "bottom",
 #         axis.ticks.y = element_blank(),
 #         axis.line = element_blank(),
 #         axis.text.y = element_blank()) +
-#   scale_y_continuous(expand = expansion(0)) + 
+#   scale_y_continuous(expand = expansion(0)) +
 #   scale_x_discrete(expand = expansion(0)) +
 #   labs(x = "", y = "") +
 #   annotate(geom = "segment", x = 7.25, xend = 7.25,
@@ -120,8 +119,8 @@ kable(data.frame(PKCs = pkcs, modules = modules))
 # tiff("sampleoverview.tiff", units="in", width=19, height=15, res=150)
 # sampleoverview
 # dev.off()
-# 
-# 
+
+
 
 
 
@@ -140,8 +139,7 @@ QC_params <-
        minNuclei = 20,         # Minimum # of nuclei estimated (100)
        minArea = 1000)         # Minimum segment area (5000)
 myData <-
-  setSegmentQCFlags(myData, 
-                    qcCutoffs = QC_params)        
+  setSegmentQCFlags(myData, qcCutoffs = QC_params)        
 
 # Collate QC Results
 QCResults <- protocolData(myData)[["QCFlags"]]
@@ -151,13 +149,11 @@ QC_Summary <- data.frame(Pass = colSums(!QCResults[, flag_columns]),
 QCResults$QCStatus <- apply(QCResults, 1L, function(x) {
   ifelse(sum(x) == 0L, "PASS", "WARNING")
 })
-QC_Summary["TOTAL FLAGS", ] <-
-  c(sum(QCResults[, "QCStatus"] == "PASS"),
-    sum(QCResults[, "QCStatus"] == "WARNING"))
+QC_Summary["TOTAL FLAGS", ] <-  c(sum(QCResults[, "QCStatus"] == "PASS"), sum(QCResults[, "QCStatus"] == "WARNING"))
 
 
 ## ----qcflagHistogramsCode, eval = TRUE, warning = FALSE, message = FALSE------
-library(ggplot2)
+
 
 col_by <- "dx"
 
@@ -602,7 +598,7 @@ percentVar=round(100*summary(pca.object)$importance[2, PCAxy],0)
 
 
 ggplot(pData(target_myData),
-               aes(x = PC1, y = PC2, color=class, label=class)) +
+               aes(x = PC1, y = PC2, color=class, label=dx)) +
   geom_point(size = 3) + geom_text(hjust=1.1, vjust=0.2)+
   xlab(paste0("PC", PCAx ,": ", percentVar[1], "% variance")) +
   ylab(paste0("PC", PCAy ,": ", percentVar[2], "% variance")) +
@@ -643,7 +639,7 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
 
 
 
-
+#save(final, target_myData, file = "C:/Users/edmondsonef/Desktop/KPC_geoMX_exp1.RData")
 
 
 
@@ -659,8 +655,10 @@ pheatmap(assayDataElement(target_myData[GOI, ], elt = "log_q"),
 
 
 ## ----Differential Expression----
-
+load("C:/Users/edmondsonef/Desktop/DSP GeoMX/data/WTA_04122022/RData/KPC_geoMX_exp1.RData")
 load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_geoMX_new.RData")
+
+
 # If comparing structures that co-exist within a given tissue, use an LMM model 
 # with a random slope. Diagnosis is our test variable. We control for tissue 
 # sub-sampling with slide name using a random slope and intercept; the intercept adjusts for the multiple 
