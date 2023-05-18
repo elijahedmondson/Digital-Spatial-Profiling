@@ -23,11 +23,77 @@ library(SPIAT)
 # For this part of the tutorial, we will use the image image_no_markers simulated with the spaSim package. This image contains "Tumour", "Immune", "Immune1" and "Immune2" cells without marker intensities.
 
 
+data("image_no_markers")
+
+plot_cell_categories(
+  image_no_markers, c("Tumour", 
+                      "Immune",
+                      "Immune1",
+                      "Immune2",
+                      "Others"),
+  c("red","blue","darkgreen", "brown","lightgray"), "Cell.Type")
+
+# Users are recommended to test out different radii and then visualise the clustering results. To aid in this process, users can use the average_minimum_distance() function, which calculates the average minimum distance between all cells in an image, and can be used as a starting point.
+
+average_minimum_distance(image_no_markers)
+
+## [1] 17.01336
+
+# We then identify the cellular neighbourhoods using our hierarchical algorithm with a radius of 50, and with a minimum neighbourhood size of 100. Cells assigned to neighbourhoods smaller than 100 will be assigned to the "Cluster_NA" neighbourhood.
+
+clusters <- identify_neighborhoods(
+  image_no_markers, method = "hierarchical", min_neighborhood_size = 100,
+  cell_types_of_interest = c("Immune", 
+                             "Immune1", 
+                             "Immune2"), radius = 50, 
+  feature_colname = "Cell.Type")
+
+# This plot shows clusters of "Immune", "Immune1" and "Immune2" cells. Each number and colour corresponds to a distinct cluster. Black cells correspond to 'free', un-clustered cells.
+# 
+# We can visualise the cell composition of neighborhoods. To do this, we can use composition_of_neighborhoods() to obtain the percentages of cells with a specific marker within each neighborhood and the number of cells in the neighborhood.
+# 
+# In this example we select cellular neighbourhoods with at least 5 cells.
+
+neighorhoods_vis <- composition_of_neighborhoods(clusters, feature_colname = "Cell.Type")
+neighorhoods_vis <- neighorhoods_vis[neighorhoods_vis$Total_number_of_cells >=5,]
+
+# Finally, we can use plot_composition_heatmap() to produce a heatmap showing the marker percentages within each cluster, which can be used to classify the derived neighbourhoods.
+
+plot_composition_heatmap(neighorhoods_vis, feature_colname="Cell.Type")
+
+# This plot shows that Cluster_1 and Cluster_2 contain all three types of immune cells. Cluster_3 does not have Immune1 cells. Cluster_1 and Cluster_2 are more similar to the free cells (cells not assigned to clusters) in their composition than Cluster_3.
+
 
 
 ######
-###### Characterising the distribution of the cells of interest in identified tissue regions
+###### Average Nearest Neighbour Index (ANNI)
 ######
+
+
+# We can test for the presence of neighbourhoods using ANNI. We can calculate the ANNI with the function average_nearest_neighbor_index(), which takes one cell type of interest (e.g. Cluster_1 under Neighborhood column of clusters object) or a combinations of cell types (e.g. Immune1 and Immune2 cells under Cell.Type column of image_no_markers object) and outputs whether there is a clear neighbourhood (clustered) or unclear (dispersed/random), along with a P value for the estimate.
+# 
+# Here show the examples for both one cell type and multiple cell types.
+
+average_nearest_neighbor_index(clusters, reference_celltypes=c("Cluster_1"), feature_colname="Neighborhood", p_val = 0.05)
+average_nearest_neighbor_index(image_no_markers, reference_celltypes=c("Immune", 
+                                                                       "Immune1" , 
+                                                                       "Immune2"), 
+                               feature_colname="Cell.Type", p_val = 0.05)
+
+# p_val is the cutoff to determine if a pattern is significant or not. If the p value of ANNI is larger than the threshold, the pattern will be "Random". Although we give a default p value cutoff of 5e-6, we suggest the users to define their own cutoff based on the images and how they define the patterns "Clustered" and "Dispersed".
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
