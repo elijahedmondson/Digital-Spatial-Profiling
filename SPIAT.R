@@ -1,3 +1,5 @@
+options("download.file.method"="libcurl")
+
 if (!require("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 
