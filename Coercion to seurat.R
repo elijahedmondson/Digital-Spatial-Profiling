@@ -2,7 +2,6 @@ library(GeomxTools)
 library(Seurat)
 library(SpatialDecon)
 library(patchwork)
-#https://satijalab.org/seurat/articles/de_vignette.html
 library(DESeq2)
 library(MAST)
 
@@ -16,6 +15,8 @@ library(MAST)
 
 #load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_seurat.RData")
 load("C:/Users/edmondsonef/Desktop/DSP GeoMx/Results/KPC_seurat_2023.RData")
+
+load("F:/GeoMX KPC/WTA_11232022/processed_data/KPC_geoMX_exp2.RData")
 
 head(mySeurat, 3)
 mySeurat@misc[1:8]
