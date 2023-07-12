@@ -1,21 +1,76 @@
-setwd('~/Projects/DSP - Hwang PDAC Round 2/new_DCCs/')
-load('ssGSEA_UpdatedWorkspace_5-23-21.RData')
+# setwd('~/Projects/DSP - Hwang PDAC Round 2/new_DCCs/')
+# load('ssGSEA_UpdatedWorkspace_5-23-21.RData')
 
 ## Load libraries
 library(ggplot2)
 library(ggrepel)
 library(ggsci)
 library(pheatmap)
-
-install.packages("BiocManager")
-BiocManager::install("GSVA")
-
 library(GSVA)
+library(org.Mm.eg.db)
+#library(dplyr)
+library(clusterProfiler)
+
 #https://www.bioconductor.org/packages/release/bioc/vignettes/GSVA/inst/doc/GSVA.html#:~:text=Gene%20set%20variation%20analysis%20(GSVA,from%20genes%20to%20gene%20sets.
 
-#### Section 6: ssGSEA analysis & comparison ####
-# rerun ssGSEA and see if it holds the same or if it changes dramatically
-#
+load("F:/GeoMX KPC/WTA_04122022/processed_data/KPC_geoMX_exp1.RData")
+
+
+#https://github.com/whwanglab/PDAC/blob/main/src/R/Detrending_and_ssGSEA.R
+
+
+## Create datafram of 
+
+# head(target_myData@assayData$exprs)
+# head(target_myData@assayData$log_q)
+# head(target_myData@assayData$q_norm)
+new_dfs <- target_myData@assayData$q_norm
+row.names(new_dfs) <- bitr(row.names(new_dfs), fromType="SYMBOL", toType=c("ENTREZID"),OrgDb="org.Mm.eg.db")
+
+eg <- bitr(row.names(new_dfs), fromType="SYMBOL", toType=c("ENTREZID"),OrgDb="org.Mm.eg.db")
+row.names(eg) <- eg$SYMBOL
+new_dfs <- merge(new_dfs, eg, by = 0)
+#make entrezID the rownames
+row.names(new_dfs) <- new_dfs$ENTREZID
+#remove Symbol and EntrezID columna
+new_dfs <- new_dfs[,-c(79,80)]
+new_dfs <- new_dfs[,-1]
+new_dfs <- as.matrix(new_dfs)
+#new_dfs <- as.numeric(new_dfs)
+rm(eg)
+
+
+#Create list object containing a collection of gene sets defined as GO terms with annotated Entrez gene identifiers
+goannot <- AnnotationDbi::select(org.Mm.eg.db, keys=keys(org.Mm.eg.db), columns="GO")
+head(goannot)
+genesbygo <- split(goannot$ENTREZID, goannot$GO)
+length(genesbygo)
+
+class(genesbygo)
+class(new_dfs)
+
+head(new_dfs)
+
+ssGSEA <- gsva(new_dfs,
+               genesbygo,
+               method="ssgsea", 
+               min.sz = 5, 
+               max.sz=500,
+               verbose=FALSE, 
+               parallel.sz=1)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 new_dfs <- dfs
 new_dfs[[1]] <- dfs[[1]][, c('TargetName', colnames(df_clean))]
