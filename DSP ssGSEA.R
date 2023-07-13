@@ -85,18 +85,25 @@ mat = (ssGSEA - rowMeans(ssGSEA))/(rowSds(as.matrix(ssGSEA)))[row(ssGSEA)]
 mat <- as.data.frame(mat)
 colnames(mat)
 #mat <- mat[,c(1,7,8,9,15,16,18,19,29,30,32,33,39,41,43,44,45,51,53,55,56,61,62,63,67,69,72,77)]
-
+mat <- mat[,c(6,13,14,15,19,21,25,26,27,28,29,30,32,41,42,45,46,47,49,50,55,57,58,59,64,69,72,74)]
 
 mat <- as.data.frame(mat)
-keywords <- c("axon","DNA", "nerve", "angiogenesis", "dendrite ", "myelin", "synapse", "neuron")
+keywords <- c("axon", "nerve", "dendrite ", "myelin", "synapse", "neuron")
+keywords <- c("angiogenesis", "hypoxia", "oxygen", "DNA")
+keywords <- c("p53", "apoptosis", "senescence", "cell cycle", "superoxide")
 mat1 <- mat %>% filter(grepl(paste(keywords,collapse="|"), rownames(mat)))
 rownames(mat1)
 mat1 <- as.matrix(mat1)
-mat1 <- subset(mat1, (rowMax(mat1) + abs(rowMin(mat1))) > 5.5)
+mat1 <- subset(mat1, (rowMax(mat1) + abs(rowMin(mat1))) > 3.5)
 rownames(mat1)
 
+mat1 <- as.matrix(mat1)
+Heatmap(mat1, col = colorRamp2(c(-2,0,2), c("orangered", "white", "purple")))
+
+
+
 mat <- as.matrix(mat)
-mat1 <- subset(mat, (rowMax(mat) + abs(rowMin(mat))) > 5.8)
+mat1 <- subset(mat, (rowMax(mat) + abs(rowMin(mat))) > 4.75)
 rownames(mat1)
 
 
@@ -115,9 +122,8 @@ pheatmap(mat1,
          clustering_distance_rows = "correlation",
          clustering_distance_cols = "correlation",
          #breaks = seq(-3, 3, 0.05),
-         #color = colorRampPalette(c("orangered", "white", "purple"))(120),
-         annotation_col = pData(target_myData)[,c("dx","Strain", "class")])
-           #pData(target_myData)[, c("dx", "Sex","Class")])
+         color = colorRampPalette(c("orangered", "white", "purple"))(120),
+         annotation_col =  pData(target_myData)[, c("dx", "Sex")])
 
 
 
