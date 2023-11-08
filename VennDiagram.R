@@ -1,5 +1,3 @@
-
-
 library(VennDiagram)
 library(gridExtra)
 library(readxl)
@@ -12,6 +10,29 @@ library(ggplot2)
 library(tidyverse)
 library(gapminder)
 library(dplyr)
+
+head(write)
+PVN_stroma <- dplyr::filter(write, Subset == "PV/N" & Estimate > 0.5)
+PVN_glands <- dplyr::filter(write, Subset == "PV/N" & Estimate < -0.5)
+NN_stroma <- dplyr::filter(write, Subset == "N/N" & Estimate > 0.5)
+NN_glands <- dplyr::filter(write, Subset == "N/N" & Estimate < -0.5)
+
+gene_list <- list(PVN_stroma = PVN_stroma$Gene, 
+                  PVN_glands = PVN_glands$Gene,
+                  NN_stroma = NN_stroma$Gene,
+                  NN_glands = NN_glands$Gene)
+VennDiagram <- venn.diagram(x = gene_list, 
+                            fill = c("blue", "red", "green", "yellow"),
+                            cat.col = c("blue", "red", "green", "yellow"),
+                            cex = 2,lty = "blank",
+                            cat.cex = 2,
+                            filename = NULL)
+cowplot::plot_grid(VennDiagram)
+
+
+
+
+
 
 # results <- read.csv("F:/GeoMX KPC/WTA_11232022/processed_data/STRAIN_p05_KPC_PDAC.csv")
 # mt_list = split(results, f = results$comp)
