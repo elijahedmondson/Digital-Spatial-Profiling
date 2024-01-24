@@ -17,8 +17,8 @@ library(circlize)
 library(clusterProfiler)
 
 
-load("F:/GeoMX KPC/WTA_04122022/processed_data/KPC_geoMX_exp1.RData")
-load("F:/GeoMX KPC/WTA_11232022/processed_data/KPC_geoMX_exp2.RData")
+# load("F:/GeoMX KPC/WTA_04122022/processed_data/KPC_geoMX_exp1.RData")
+# load("F:/GeoMX KPC/WTA_11232022/processed_data/KPC_geoMX_exp2.RData")
 
 GO_rosetta <- read.csv("C:/Users/edmondsonef/Desktop/GO Terms.csv")
 
